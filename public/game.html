@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Find Me Fast</title>
+  <link rel="stylesheet" type="text/css" href="styles.css" />
+  <!-- <script src="http://code.jquery.com/jquery-1.5.min.js"></script> -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="game.js"></script>
+  
+   
+  </style>
+</head>
+<body>
+  
+	<section id="accueil">
+		<h1>Find Me Fast</h1>
+		<nav>
+			<ul>
+				<li><a href="#creer_partie">Créer une partie</a></li>
+				<li><a href="#rejoindre_partie">Rejoindre une partie</a></li>
+				<li><a href="#options">Options</a></li>
+			</ul>
+		</nav>
+	</section>
+	<section id="creer_partie">
+		<h2>Nouvelle partie</h1>
+		<nav>
+			<ul>
+				<li><a href="#accueil">Accueil</a></li>
+			</ul>
+		</nav>
+		<article>
+			<form>
+				<label for="nom">Votre nom</label>
+				<input type="text" name="nom" id="nom" />
+				<label for="partie">Nom de la partie</label>
+				<input type="text" name="partie" id="partie" />
+				<input type="submit" name="creer_partie"  value="Créer" />
+			</form>
+		</article>
+	</section>
+	<section id="rejoindre_partie">
+		<h2>Rejoindre une partie</h1>
+		<nav>
+			<ul>
+				<li><a href="#accueil">Accueil</a></li>
+			</ul>
+		</nav>
+		<article>
+			<form>
+				<label for="">Parties disponibles</label>
+				<select>
+					<option >La super partie</option>
+				</select>
+				<input type="submit" name="rejoindre_partie"  value="Rejoindre" />
+			</form>
+		</article>
+	</section>
+	<section id="options">
+		<h2>Options</h1>
+		<nav>
+			<ul>
+				<li><a href="#accueil">Accueil</a></li>
+			</ul>
+		</nav>
+		<article>
+			<p>Pas encore d'options</p>
+		</article>
+	</section>
+	<section id="jeu">
+		<h2>Find me Fast</h2>
+		<nav>
+			<ul>
+				<li><a href="#accueil">Accueil<span class="icon"></span></a></li>
+				<li><a href="#abandon">Abandon<span class="icon"></span></a></li>
+				<li><a href="#pret">Prêt<span class="icon"></span></a></li>
+				<li><a href="#demarrer">Démarrer<span class="icon"></span></a></li>
+			</ul>
+		</nav>
+		<article>
+			<div id="newJeu"></div>
+			<div id="monJeu"></div>
+			<ul id="listeJoueurs" >
+			</ul>
+		</article>
+	</section>
+
+
+</body>
+</html>
+

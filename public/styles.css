@@ -1,0 +1,136 @@
+/* Un bon début */
+html{
+ background:#ddd;
+ text-shadow:1px 1px 1px white;
+ font-family:monospace;
+ min-height:100%;
+ position:relative;
+ overflow:hidden;
+ padding:0;
+ margin:0;
+}
+*{
+-moz-box-sizing:border-box;
+box-sizing:border-box;
+}
+
+section {
+ background:#ddd;
+ width:100%;
+ position:absolute;
+ top:0;
+ bottom:0;
+ left:0;
+ right:0;
+ text-align:center;
+ min-height:100%;
+ padding:10% 20%;
+ margin:0;
+ border:10px solid #aaa;
+}
+#accueil,#jeu{
+	z-index:1;
+}
+
+section ul {
+ padding-left:0;
+ list-style-type:none;
+}
+section li a{
+ display:block;
+ color:#000;
+ text-decoration:none;
+ padding:1em;
+ background-color:rgba(255,255,255,0);
+ border-radius:2em;
+ letter-spacing: normal;
+ -moz-transition: all .5s;
+ transition: all .5s ease-out;
+
+
+}
+section li a:hover{
+ letter-spacing: .8em;
+ background-color:#fff;
+}
+
+
+
+/* partie jeu */
+
+/* Menu de jeu */
+#jeu h2 {
+	display:none;
+}
+#jeu ul {
+	position:absolute;
+	z-index:3;
+	right:100%;
+	bottom:1em;
+	margin-right:-1em;
+	text-align:right;
+}
+#jeu li a{
+	border-radius:.5em;
+	padding:0 0 0 .5em;
+	white-space: nowrap;
+
+}
+#jeu li a span{
+display:inline-block;
+width:2em;
+height:2em;
+background:white;
+vertical-align: middle;
+margin-left:.3em;
+border-radius:50%;
+}
+
+#jeu li a:hover{
+ letter-spacing: normal;
+ margin-right:-100%;
+}
+#newJeu,#monJeu {
+	position:absolute;
+	z-index:2;
+	min-height:50%;
+	max-height:50%;
+	left:2em;
+	right:2em;
+	/*min-width:100%;*/
+	border:1px solid #000;
+}
+#newJeu {
+top:0;
+}
+#monJeu {
+bottom:0;
+}
+
+
+/* Media Queries*/
+
+@media screen and (max-width:50em) {
+	section{
+	 padding:10%;
+	}
+
+}
+@media screen and (max-width:40em) {
+	section{
+	 padding:5%;
+	}
+	li a:hover{
+	 letter-spacing: .5em;
+	}
+
+}
+@media screen and (max-width:22em) {
+	section{
+		/*background-color: red;*/
+		padding:1%;
+	}
+	li a:hover{
+	 letter-spacing: .2em;
+	}
+}
