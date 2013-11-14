@@ -30,13 +30,12 @@
 
 
 
-	/* constantes */
-	var nbjoueurs=0;
-	var joueurs=[];
+	/********** GESTION DU JEU *************/
 
-	//on ne gere qu'une partie pour l'instant
-	//'partie' indique si la partie en débutée
-	var partie=false;
+	var joueurs=[];
+	var parties=[];
+
+
 
 	//pas très modulable tout ca... a refaire...
 	// prototyper l'objet client?
@@ -68,52 +67,74 @@
 	//	balpos {}
 	//
 
+	//TODO nettoyer régulièrement joueurs et parties
 
 
 	//gestion du serveur de socket
 	//lors de la connexion d'un client
 	io.sockets.on('connection', function (client) {
 
-
+		var joueur, partie;
 		//nombre de joueur maxi ou partie commencée
+		/*
 	    if(nbjoueurs>6 || partie){
-			client.emit("accuse",{num:0,run:run,message:"jeux plein : mode spectateur"});
+			client.emit("accuse",{id:0,message:"jeux plein : mode spectateur"});
 			return;
 	    }
 
 		nbjoueurs+=1;
-		//recherche de l'id le plus petit disponible hormis 1
-		//qui ne peux se deconnecter sans tuer la partie
+		*/
+		//recherche de l'id le plus petit disponible 
+		/*
+		* TODO : Regarder les limites de cette fonction a +++ joueurs
+		*/
 		var id=1;
 		var i=0;
 		while(i<=joueurs.length){
 			if(!joueurs[i]){
 				id=i+1;
-				joueurs[id-1]={num:id,client:client,pseudo:'',ready:0,score:0};
-				//master=n;
+
+				joueur ={id:id,master:false,client:client,pseudo:'',ready:0,score:0};
+				joueurs[id-1]=joueur;
+
 				break;
 			}
 			i++;
 		}
-
-		console.log(nbjoueurs+" joueurs");
-
+		
+		console.log("Connexion d'un nouveau joueur id="+id);
+		
 
 		//accusé de reception de la connexion
 		client.emit("accuse",{num:id,message:"ok game"});
 
 
 
+
 		/************ partie asynchrone ****************/
 
-		client.on('pseudo', function(data) {
+		client.on('creerPartie', function(data) {
+			//le joueur devient master de sa partie
+			joueur.master=true;
+			joueur.pseudo=data.nomJoueur;
 
-			console.log(data.pseudo+" s'est inseré dans le jeu");
-			joueurs[id-1].pseudo=data.pseudo;
+			partie={
+				"id":parties.length,
+				"nom":data.nomPartie,
+				"joueurs":[id]
 
-			client.broadcast.emit("joueur",{num:id,pseudo:data.pseudo,message:""});
+			};
+			parties.push(partie);
+
+
+			console.log(joueur.pseudo+" cré le nouveau jeu "+partie.nom);
+
+			client.emit("jeu",{id:partie.id,pseudo:joueur.pseudo});
+			//client.broadcast.emit("joueur",{num:id,pseudo:data.pseudo,message:""});
 
 		});
+
+
 
 		client.on('ready', function(data) {
 			joueurs[id-1].ready=1;

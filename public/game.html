@@ -17,13 +17,13 @@
 		<h1>Find Me Fast</h1>
 		<nav>
 			<ul>
-				<li><a href="#creer_partie">Créer une partie</a></li>
+				<li><a href="#nouvelle_partie">Créer une partie</a></li>
 				<li><a href="#rejoindre_partie">Rejoindre une partie</a></li>
 				<li><a href="#options">Options</a></li>
 			</ul>
 		</nav>
 	</section>
-	<section id="creer_partie">
+	<section id="nouvelle_partie">
 		<h2>Nouvelle partie</h1>
 		<nav>
 			<ul>
@@ -31,12 +31,12 @@
 			</ul>
 		</nav>
 		<article>
-			<form>
-				<label for="nom">Votre nom</label>
-				<input type="text" name="nom" id="nom" />
-				<label for="partie">Nom de la partie</label>
-				<input type="text" name="partie" id="partie" />
-				<input type="submit" name="creer_partie"  value="Créer" />
+			<form method="get" action="">
+				<label for="nom_joueur">Votre nom</label>
+				<input type="text" name="nom_joueur" id="nom_joueur" value="Cedricici"/>
+				<label for="nom_partie">Nom de la partie</label>
+				<input type="text" name="nom_partie" id="nom_partie" value="toto" />
+				<a href="creer_partie">Créer</a>
 			</form>
 		</article>
 	</section>
@@ -48,12 +48,12 @@
 			</ul>
 		</nav>
 		<article>
-			<form>
+			<form method="get" action="">
 				<label for="">Parties disponibles</label>
-				<select>
+				<select name="liste_parties" id="liste_parties">
 					<option >La super partie</option>
 				</select>
-				<input type="submit" name="rejoindre_partie"  value="Rejoindre" />
+				<a href="rejoindre_partie">Rejoindre</a>
 			</form>
 		</article>
 	</section>
@@ -72,15 +72,16 @@
 		<h2>Find me Fast</h2>
 		<nav>
 			<ul>
-				<li><a href="#accueil">Accueil<span class="icon"></span></a></li>
-				<li><a href="#abandon">Abandon<span class="icon"></span></a></li>
-				<li><a href="#pret">Prêt<span class="icon"></span></a></li>
-				<li><a href="#demarrer">Démarrer<span class="icon"></span></a></li>
+				<li><a class="accueil" href="#accueil">Accueil<span class="icon"></span></a></li>
+				<li><a class="abandon" href="#abandon">Abandon<span class="icon"></span></a></li>
+				<li><a class="pret" href="#pret">Prêt<span class="icon"></span></a></li>
+				<li><a class="demarrer" href="#demarrer">Démarrer<span class="icon"></span></a></li>
 			</ul>
 		</nav>
 		<article>
 			<div id="newJeu"></div>
 			<div id="monJeu"></div>
+			<div id="pseudo"></div>
 			<ul id="listeJoueurs" >
 			</ul>
 		</article>

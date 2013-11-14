@@ -8,6 +8,8 @@ GAME.gameStart = (function(){
 
 
 	var pageCourante="#jeu";
+	var id=0;
+
 	/*
 	var pong; //le thread
 	var width=800;
@@ -58,14 +60,24 @@ GAME.gameStart = (function(){
 
 	/****************** Partie socket **************************/
 
-
+	//accusé de reception de la connexion au serveur
+	//TODO : surtout utile en cas de non connexion !!! 
 	sock.on("accuse",function(data){
-		console.log(data);
+		//console.log(data);
+		id=data.id;
 	});
 
 
-	sock.on("message",function(data){
-		console.log(data);
+	sock.on("jeu",function(data){
+		console.log(data.id);
+
+		document.getElementById("pseudo").innerHTML=data.pseudo;
+		switchPage("#jeu");
+
+		document.querySelector("#jeu nav .pret .icon").style.background='red';	//passage en mode attente
+
+
+
 	});
 
 	// message reçu lorsqu'un joueur est prêt.
@@ -90,52 +102,57 @@ GAME.gameStart = (function(){
 
 
 
-/* fonctions */
+	/* fonctions */
 
-var switchPage = function(newpage){
-	var courante = document.querySelector(pageCourante);
-	courante.style.zIndex = 0;
-	var nouvelle = document.querySelector(newpage);
-	nouvelle.style.zIndex = 1;
-	pageCourante=newpage;
+	var switchPage = function(newpage){
+		var courante = document.querySelector(pageCourante);
+		//courante.style.zIndex = 0;
+		courante.style.left = '-100%';
+		var nouvelle = document.querySelector(newpage);
+		//nouvelle.style.zIndex = 1;
+		nouvelle.style.left = '0';
+		pageCourante=newpage;
 
-}
-
-
-/****************** Partie interraction *********************/
-
+	}
 
 
-//page accueil
-var liens = document.querySelectorAll('a');
+	/****************** Partie interraction *********************/
 
-console.log(liens);
 
-for (var i = 0; i < liens.length; i++) {
- 	liens[i].addEventListener("click",function(event){
- 		event.preventDefault();
- 		var target = event.currentTarget.attributes['href'].nodeValue || '#accueil';
-		console.log(target)
 
-		if(target=="#accueil"){
-			switchPage(target);
-		}
-		if(target=="#creer_partie"){
-			switchPage(target);
-		}
-		if(target=="#rejoindre_partie"){
-			switchPage(target);
-		}
-		if(target=="#options"){
-			switchPage(target);
-		}
-		if(target=="#accueil"){
-			//switchPage(target);
-		}
+	////gestion des différents liens
+	var liens = document.querySelectorAll('a');
+	for (var i = 0; i < liens.length; i++) {
+	 	liens[i].addEventListener("click",function(event){
+	 		event.preventDefault();
+	 		var target = event.currentTarget.attributes['href'].nodeValue || '#accueil';
+			console.log(target)
 
- 	},false);
-}
+			if(target=="#accueil"){
+				switchPage(target);
+			}
+			if(target=="#nouvelle_partie"){
+				switchPage(target);
+			}
+			if(target=="#rejoindre_partie"){
+				switchPage(target);
+			}
+			if(target=="#options"){
+				switchPage(target);
+			}
+			if(target=="creer_partie"){
+				var nomJoueur = document.getElementById("nom_joueur").value;
+				var nomPartie = document.getElementById("nom_partie").value;
 
+				sock.emit("creerPartie",{nomJoueur:nomJoueur,nomPartie:nomPartie});
+				
+				//TODO : afficher un sablier
+				//console.log(nomJoueur);
+				//switchPage(target);
+			}
+
+		},false);
+	}
 
 });
 

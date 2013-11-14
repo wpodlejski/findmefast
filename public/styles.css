@@ -20,16 +20,18 @@ section {
  position:absolute;
  top:0;
  bottom:0;
- left:0;
+ left:-100%;
  right:0;
  text-align:center;
  min-height:100%;
  padding:10% 20%;
  margin:0;
  border:10px solid #aaa;
+ transition:all .5s;
 }
-#accueil,#jeu{
-	z-index:1;
+
+#accueil{
+	left:0;
 }
 
 section ul {
@@ -52,6 +54,13 @@ section li a{
 section li a:hover{
  letter-spacing: .8em;
  background-color:#fff;
+}
+
+
+/* menu créations */
+section label,section input {
+display:block;
+margin:auto;
 }
 
 
@@ -106,7 +115,16 @@ top:0;
 #monJeu {
 bottom:0;
 }
-
+#pseudo {
+	position:absolute;
+	z-index:3;
+	left:0;
+	bottom:0;
+	font-weight: bold;
+	background-color: rgba(255,255,255,.8);
+	border-radius:0 1em 0 0;
+	padding:.3em .5em .1em .1em;
+}
 
 /* Media Queries*/
 
