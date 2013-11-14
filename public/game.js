@@ -80,8 +80,6 @@ GAME.gameStart = (function(){
 
 		//passage en mode attente
 		document.querySelector("#jeu nav .pret .icon").style.background='red';	//passage en mode attente
-
-
 	});
 
 	// message reçu lorsqu'un joueur est prêt.
@@ -132,11 +130,11 @@ GAME.gameStart = (function(){
 		nouvelle.style.left = '0';
 		pageCourante=newpage;
 
+
 	}
 
 
 	/****************** Partie interraction *********************/
-
 
 
 	////gestion des différents liens

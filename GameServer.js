@@ -95,6 +95,7 @@
 				id=i+1;
 
 				joueur ={id:id,master:false,pseudo:'',ready:0,score:0};
+
 				joueurs[id-1]=joueur;
 
 				break;
@@ -124,11 +125,18 @@
 				"joueurs":[id]
 
 			};
+			parties.push(partie);
+
+
+			console.log(joueur.pseudo+" cré le nouveau jeu "+partie.nom);
+
+			client.emit("jeu",{id:partie.id,pseudo:joueur.pseudo});
+			//client.broadcast.emit("joueur",{num:id,pseudo:data.pseudo,message:""});
+
 
 			console.log(partie);
 
 			parties.push(partie);
-
 
 			console.log(joueur.pseudo+" créé le nouveau jeu "+partie.nom);
 

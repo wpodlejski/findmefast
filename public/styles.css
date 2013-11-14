@@ -58,7 +58,9 @@ section li a:hover{
 
 
 /* menu créations */
+
 section label,section input ,section select{
+
 display:block;
 margin:auto;
 }
