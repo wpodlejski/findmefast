@@ -38,7 +38,7 @@ section ul {
  padding-left:0;
  list-style-type:none;
 }
-section li a{
+section nav li a{
  display:block;
  color:#000;
  text-decoration:none;
@@ -51,7 +51,7 @@ section li a{
 
 
 }
-section li a:hover{
+section nav li a:hover{
  letter-spacing: .8em;
  background-color:#fff;
 }
@@ -73,7 +73,7 @@ margin:auto;
 #jeu h2 {
 	display:none;
 }
-#jeu ul {
+#jeu nav ul {
 	position:absolute;
 	z-index:3;
 	right:100%;
@@ -81,13 +81,13 @@ margin:auto;
 	margin-right:-1em;
 	text-align:right;
 }
-#jeu li a{
+#jeu nav li a{
 	border-radius:.5em;
 	padding:0 0 0 .5em;
 	white-space: nowrap;
 
 }
-#jeu li a span{
+#jeu nav li a span{
 display:inline-block;
 width:2em;
 height:2em;
@@ -97,11 +97,11 @@ margin-left:.3em;
 border-radius:50%;
 }
 
-#jeu li a:hover{
+#jeu nav li a:hover{
  letter-spacing: normal;
  margin-right:-100%;
 }
-#newJeu,#monJeu {
+.carte{
 	position:absolute;
 	z-index:2;
 	min-height:50%;
@@ -109,14 +109,28 @@ border-radius:50%;
 	left:2em;
 	right:2em;
 	/*min-width:100%;*/
-	border:1px solid #000;
+	/*border:1px solid #000;*/
 }
-#newJeu {
-top:0;
+#newJeu {top:0;}
+#monJeu {bottom:0;}
+
+.carte ul{
+position:relative;
+width:200px;
+height:200px;
+margin:0 auto;
+border:1px solid #000;
+border-radius:2em;
+box-shadow:.2em .2em .2em #000;
 }
-#monJeu {
-bottom:0;
+.carte ul li a{
+	position:absolute;
+	display:block;
+	background:rgba(255,0,0,.1);
+	border-radius: 50% 50%;
 }
+
+
 #pseudo {
 	position:absolute;
 	z-index:3;

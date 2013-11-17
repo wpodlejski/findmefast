@@ -7,6 +7,72 @@ var GAME=GAME||{};
 GAME.gameStart = (function(){
 
 
+	//test de portée de variable
+
+	var a=document.getElementById("newJeu");
+	var b=document.getElementById("monJeu");
+	a.client=1111;
+	b.client=2222;
+	
+	var event = new Event('evt');
+
+	var test1 = function(client){
+
+		var c=3333;
+
+
+		client.addEventListener("evt",function(){
+
+			c=6666*client.client;
+			console.log(client+" declenche evt , c vaut "+c);
+			test11();
+
+		});
+
+
+		var test11 = function(){
+
+			console.log("c vaut "+c+" dans la fonction test11 du client "+client.client);
+
+		};
+
+	};
+
+	test1(a);
+
+	test1(b);
+
+	a.dispatchEvent(event);
+
+
+	b.dispatchEvent(event);
+
+
+	console.log(" Fin de l'execution, a.c vaut "+a.c);
+	console.log(" Fin de l'execution, b.c vaut "+b.c);
+
+/*****************************************************************/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	var pageCourante="#jeu";
 	var id=0;
 
@@ -61,10 +127,13 @@ GAME.gameStart = (function(){
 	/****************** Partie socket **************************/
 
 	//accusé de reception de la connexion au serveur
-	//TODO : surtout utile en cas de non connexion !!! 
+	//TODO : surtout utile en cas de  reconnexion !!! 
 	sock.on("accuse",function(data){
 		//console.log(data);
 		id=data.id;
+		//on ramene à l'accueil
+		switchPage("#accueil");
+
 	});
 
 
@@ -73,7 +142,7 @@ GAME.gameStart = (function(){
 			alert("Erreur :"+data.erreur);
 			return;
 		}
-		console.log(data.partie.id);
+		console.log(data.partie);
 
 		document.getElementById("pseudo").innerHTML=data.joueur.pseudo;
 		switchPage("#jeu");
@@ -97,26 +166,16 @@ GAME.gameStart = (function(){
 	});
 
 
-
-
-///////////////////////////////////////////////////
-
-
-
 	// message reçu par le master lorsque tous les joueur sont prêt
-	sock.on("startable",function(data){
-		console.log("Tout le monde est prêt");
-		console.log(data);
+	sock.on("tour",function(data){
+		console.log("On recoit un tour :");
+		//alert(data);
+
+		document.getElementById("newJeu").innerHTML=donne2html(data.tas);
+		//chargement du tas
+		document.getElementById("monJeu").innerHTML=donne2html(data.cartes);
 
 	});
-
-	// démarage du jeu
-	//TODO : mettre en place un systeme d'attente mutuelle
-	sock.on("start",function(data){
-		console.log("le jeu commence");
-		console.log(data);
-	});
-
 
 
 	/* fonctions */
@@ -134,6 +193,22 @@ GAME.gameStart = (function(){
 	}
 
 
+	var donne2html = function(cartes){
+
+		var html='<ul>';
+
+		for (var i =0;i<cartes.length;i++) {
+			html+='<li><a href="carte'+i+'" style="left:'
+			+(cartes[i].x-cartes[i].r)+'%;top:'+(cartes[i].y-cartes[i].r)
+			+'%;width:'+cartes[i].r*2+'%;height:'+cartes[i].r*2
+			+'%;" ><img src="images/'+cartes[i].img
+			+'" alt="'+i+'" style="width:100%;height:100%;transform:rotate('
+			+cartes[i].orientation+'deg);" /></a></li>';
+		};
+		html+='</ul>';
+
+		return html;
+	}
 	/****************** Partie interraction *********************/
 
 
@@ -142,7 +217,7 @@ GAME.gameStart = (function(){
 	for (var i = 0; i < liens.length; i++) {
 	 	liens[i].addEventListener("click",function(event){
 	 		event.preventDefault();
-	 		var target = event.currentTarget.attributes['href'].nodeValue || '#accueil';
+	 		var target = event.currentTarget.attributes['href'].value || '#accueil';
 			console.log(target)
 
 			if(target=="#accueil"){
@@ -169,6 +244,10 @@ GAME.gameStart = (function(){
 			if(target=="rejoindre_partie"){ //
 				var id = document.getElementById("liste_parties").value;
 				sock.emit("rejoindrePartie",{id:id});
+				//TODO : afficher un sablier
+			}
+			if(target=="#pret"){ //
+				sock.emit("pret",{});
 				//TODO : afficher un sablier
 			}
 
