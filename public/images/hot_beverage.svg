@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Generator: Adobe Illustrator 15.0.2, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.1"
+   id="レイヤー_1"
+   x="0px"
+   y="0px"
+   width="64px"
+   height="64px"
+   viewBox="0 0 64 64"
+   enable-background="new 0 0 64 64"
+   xml:space="preserve"
+   inkscape:version="0.48.3.1 r9886"
+   sodipodi:docname="hot_beverage.svg"><metadata
+   id="metadata96"><rdf:RDF><cc:Work
+       rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
+         rdf:resource="http://purl.org/dc/dcmitype/StillImage" /></cc:Work></rdf:RDF></metadata><defs
+   id="defs94" /><sodipodi:namedview
+   pagecolor="#ffffff"
+   bordercolor="#666666"
+   borderopacity="1"
+   objecttolerance="10"
+   gridtolerance="10"
+   guidetolerance="10"
+   inkscape:pageopacity="0"
+   inkscape:pageshadow="2"
+   inkscape:window-width="811"
+   inkscape:window-height="729"
+   id="namedview92"
+   showgrid="false"
+   inkscape:zoom="5.2149125"
+   inkscape:cx="46.138303"
+   inkscape:cy="35.812576"
+   inkscape:window-x="158"
+   inkscape:window-y="195"
+   inkscape:window-maximized="0"
+   inkscape:current-layer="g3" />
+<g
+   id="g3">
+	<g
+   id="g5">
+		<defs
+   id="defs7">
+			<filter
+   id="Adobe_OpacityMaskFilter"
+   filterUnits="userSpaceOnUse"
+   x="10.206"
+   y="47.761"
+   width="38.104"
+   height="11.14">
+				<feFlood
+   style="flood-color:white;flood-opacity:1"
+   result="back"
+   id="feFlood10" />
+				<feBlend
+   in="SourceGraphic"
+   in2="back"
+   mode="normal"
+   id="feBlend12" />
+			</filter>
+		</defs>
+		<mask
+   maskUnits="userSpaceOnUse"
+   x="10.206"
+   y="47.761"
+   width="38.104"
+   height="11.14"
+   id="SVGID_1_">
+			<g
+   filter="url(#Adobe_OpacityMaskFilter)"
+   id="g15">
+				<image
+   sodipodi:absref="/home/cedricici/www/newJeu/images/359BB3D8.jpg"
+   xlink:href="359BB3D8.jpg"
+   id="image17"
+   transform="matrix(1 0 0 1 7.353 45.5771)"
+   height="16"
+   width="43"
+   overflow="visible">
+				</image>
+			</g>
+		</mask>
+		<g
+   mask="url(#SVGID_1_)"
+   id="g19">
+			<ellipse
+   fill="#9D9D9E"
+   cx="29.258"
+   cy="53.33"
+   rx="19.052"
+   ry="5.569"
+   id="ellipse21" />
+		</g>
+	</g>
+	<linearGradient
+   id="SVGID_2_"
+   gradientUnits="userSpaceOnUse"
+   x1="57.6416"
+   y1="27.6636"
+   x2="48.5591"
+   y2="32.2484">
+		<stop
+   offset="0"
+   style="stop-color:#FFFFFF"
+   id="stop24" />
+		<stop
+   offset="1"
+   style="stop-color:#B0B0B0"
+   id="stop26" />
+	</linearGradient>
+	<path
+   fill="url(#SVGID_2_)"
+   stroke="#282828"
+   stroke-width="1.522"
+   stroke-miterlimit="10"
+   d="M59.421,27.351   c-3.333-6.675-13.385-8.64-22.453-4.39c-3.015,1.414-6.074,8.386-4.358,7.582c9.107-4.269,20.462-7.839,23.38-1.997   c2.917,5.842-1.428,14.988-14.762,18.453c-2.881,0.749-1.865,1.879-4.471,2.198c3.813,0.503,8.146-0.129,12.28-2.065   C58.104,42.881,62.753,34.025,59.421,27.351z"
+   id="path28" />
+	<linearGradient
+   id="SVGID_3_"
+   gradientUnits="userSpaceOnUse"
+   x1="29.8799"
+   y1="35.5391"
+   x2="43.0171"
+   y2="72.5713">
+		<stop
+   offset="0"
+   style="stop-color:#FFFFF7"
+   id="stop31" />
+		<stop
+   offset="1"
+   style="stop-color:#000000"
+   id="stop33" />
+	</linearGradient>
+	<path
+   fill="url(#SVGID_3_)"
+   stroke="#282828"
+   stroke-width="1.6135"
+   stroke-miterlimit="10"
+   d="M51.888,24.719   c0,16.373-5.192,31.112-24.127,31.112c-19.034,0-24.127-14.739-24.127-31.112"
+   id="path35" />
+	
+		<ellipse
+   fill="#F7F2F0"
+   stroke="#282828"
+   stroke-width="1.6135"
+   stroke-miterlimit="10"
+   cx="27.76"
+   cy="24.719"
+   rx="24.127"
+   ry="11.708"
+   id="ellipse37" />
+	<linearGradient
+   id="SVGID_4_"
+   gradientUnits="userSpaceOnUse"
+   x1="37.8525"
+   y1="44.3613"
+   x2="61.9013"
+   y2="44.3613">
+		<stop
+   offset="0"
+   style="stop-color:#FFF2DF;stop-opacity:0"
+   id="stop40" />
+		<stop
+   offset="1"
+   style="stop-color:#FFF2DF"
+   id="stop42" />
+	</linearGradient>
+	<path
+   fill="url(#SVGID_4_)"
+   d="M27.76,54.841c0,0,15.363,2.342,21.447-15.448C54.106,22.292,36.758,49.197,27.76,54.841z"
+   id="path44" />
+	<g
+   id="g46">
+		<defs
+   id="defs48">
+			<ellipse
+   id="SVGID_5_"
+   cx="27.76"
+   cy="24.719"
+   rx="24.127"
+   ry="11.708" />
+		</defs>
+		<clipPath
+   id="SVGID_6_">
+			<use
+   xlink:href="#SVGID_5_"
+   overflow="visible"
+   id="use52" />
+		</clipPath>
+		<ellipse
+   clip-path="url(#SVGID_6_)"
+   fill="#33120A"
+   cx="27.76"
+   cy="29.44"
+   rx="22.329"
+   ry="10.835"
+   id="ellipse54" />
+		<ellipse
+   clip-path="url(#SVGID_6_)"
+   fill="#110300"
+   cx="27.76"
+   cy="29.272"
+   rx="20.152"
+   ry="9.778"
+   id="ellipse56" />
+		<ellipse
+   clip-path="url(#SVGID_6_)"
+   fill="#33120A"
+   cx="30.874"
+   cy="28.699"
+   rx="17.083"
+   ry="7.414"
+   id="ellipse58" />
+		<g
+   clip-path="url(#SVGID_6_)"
+   id="g60">
+			<ellipse
+   fill="#512615"
+   cx="31.053"
+   cy="24.72"
+   rx="9.996"
+   ry="3.096"
+   id="ellipse62" />
+		</g>
+		<g
+   clip-path="url(#SVGID_6_)"
+   id="g64">
+			<ellipse
+   fill="#512615"
+   cx="24.082"
+   cy="29.338"
+   rx="8.087"
+   ry="2.831"
+   id="ellipse66" />
+		</g>
+	</g>
+	<path
+   fill="#FFFFFF"
+   d="M25.868,38.686c0.146-1.055,12.827,1.613,23.769-6.664c2.104-1.589-1.249,3.703-9.706,5.688   C29.556,40.146,25.767,39.428,25.868,38.686z"
+   id="path68" />
+	
+		<ellipse
+   fill="none"
+   stroke="#282828"
+   stroke-width="1.6135"
+   stroke-miterlimit="10"
+   cx="27.76"
+   cy="24.719"
+   rx="24.127"
+   ry="11.708"
+   id="ellipse70" />
+	<path
+   fill="#FFFFFF"
+   d="M10.414,28.566c-1.758-2.095,7.979-8.023,17.347-7.23c9.368,0.794,0.463,2.91-3.328,2.822   c-3.792-0.088-10.933,0.353-8.994,2.909C17.378,29.624,12.706,31.299,10.414,28.566z"
+   id="path72" />
+	<ellipse
+   fill="#FFFFFF"
+   cx="41.089"
+   cy="28.698"
+   rx="2.116"
+   ry="1.102"
+   id="ellipse74" />
+	<ellipse
+   fill="#FFFFFF"
+   cx="43.309"
+   cy="27.067"
+   rx="2.998"
+   ry="1.411"
+   id="ellipse76" />
+	<linearGradient
+   id="SVGID_7_"
+   gradientUnits="userSpaceOnUse"
+   x1="10.5698"
+   y1="2.9302"
+   x2="18.2407"
+   y2="26.9124">
+		<stop
+   offset="0"
+   style="stop-color:#FFFFFF"
+   id="stop79" />
+		<stop
+   offset="1"
+   style="stop-color:#FFFFFF;stop-opacity:0"
+   id="stop81" />
+	</linearGradient>
+	
+	<linearGradient
+   id="SVGID_8_"
+   gradientUnits="userSpaceOnUse"
+   x1="50.874"
+   y1="4.5327"
+   x2="32.8942"
+   y2="27.5836">
+		<stop
+   offset="0"
+   style="stop-color:#FFFFFF"
+   id="stop86" />
+		<stop
+   offset="1"
+   style="stop-color:#FFFFFF;stop-opacity:0"
+   id="stop88" />
+	</linearGradient>
+	
+</g>
+</svg>
