@@ -25,7 +25,7 @@
 
 	/********** GESTION DU JEU *************/
 
-	//var joueurs=[];
+	var joueurs=[];
 	var clients=[];
 	var parties=[];
 	
@@ -78,9 +78,12 @@
 	//lors de la connexion d'un client
 	io.sockets.on('connection', function (client) {
 
-		client.joueur={};
-		client.partie={};
 		
+		var joueur={};
+		var partie={};
+		
+		//client.joueur=joueur;
+
 
 		//nombre de joueur maxi ou partie commencée
 		/*
@@ -95,16 +98,16 @@
 		/*
 		* TODO : Regarder les limites de cette fonction a +++ joueurs
 		*/
-		client.id=1;
-
+		var id=1;
 		var i=0;
+
 		while(i<=joueurs.length){
 			if(!joueurs[i]){
-				client.id=i+1;
+				id=i+1;
 
-				client.joueur ={id:client.id,master:0,pseudo:'',ready:0,score:0};
+				joueur ={id:id,master:0,pseudo:'',ready:0,score:0};
 
-				joueurs[id-1]=client.joueur;
+				joueurs[id-1]=joueur;
 				clients[id-1]=client;
 				break;
 			}
@@ -128,24 +131,22 @@
 
 		client.on('creerPartie', function(data) {
 			//le joueur devient master de sa partie
-			client.joueur.master=1;
-			client.joueur.pseudo=data.nomJoueur;
+			joueur.master=1;
+			joueur.pseudo=data.nomJoueur;
 
 			//ATTENTION la partie contient les id des joueurs!
-			var partie={
+			partie={
 				id:parties.length,
 				nom:data.nomPartie,
-				joueurs:[client.id],
+				joueurs:[id],
 				tas:0
 			};
 
 			console.log("On créé la partie "+partie.nom+" pour le joueur "
-				+joueurs[partie.joueurs[0]-1].pseudo+" dont l'id est "+client.joueur.id);
+				+joueurs[partie.joueurs[0]-1].pseudo+" dont l id est "+joueur.id);
 
-			//en 2 phase pour éliminer l'erreur dans la fonction 
 			// creerDonne qui teste partie.tas ?????
-			partie.tas=creerDonne();
-
+			partie.tas=creerDonne(0);
 
 			parties.push(partie);
 
@@ -157,11 +158,9 @@
 			client.join('partie'+client.partieId);
 
 
-			console.log(client.joueur.pseudo+" créé le nouveau jeu "+partie.nom);
+			console.log(joueur.pseudo+" créé le nouveau jeu "+partie.nom);
 
-
-
-			client.emit("jeu",{partie:partie,joueur:client.joueur});
+			client.emit("jeu",{partie:partie,joueur:joueur});
 
 			
 		});
@@ -174,9 +173,8 @@
 
 		client.on('rejoindrePartie', function(data) {
 
-			var partie=cherchePartie(data.id);
+			partie=parties[data.id];
 			
-
 			if(!partie){
 				client.emit("jeu",{erreur:"Partie non trouvée"});
 			}else{
@@ -188,12 +186,13 @@
 
 				//TODO : le pb est la les clients se partagent la parties
 				// or JS en fait de copies...
-				client.partiId=data.id
+				client.partieId=data.id
 
 				//ajout le joueur à la partie
-				parties[data.id].joueurs.push(client.joueur.id);
+				parties[data.id].joueurs.push(joueur.id);
 				
-				//mise à jour de la copie locale?????
+				//mise à jour de la copie locale????
+				//TODO : vérifier l'effet réel
 				partie=parties[data.id];
 
 				//on s'abonne au groupe correspondant à la partie
@@ -212,36 +211,37 @@
 		client.on('pret', function(data) {
 			joueur.ready=1;
 
-			//TODO tester cela avant
-			var partie=parties[client.partiId];
-			//on regarde dans la partie : 
+
+			console.log("Partie vaut"+partie.id+" alors que client.partieId vaut "+client.partieId );
+
 			//si tous les joueurs sont ready on démarre
 			var ready=true;
-
-			for(var i=0;i<partie.joueurs.length;i++){
-				var j = partie.joueurs[i];
-				console.log(j+"=>"+joueurs[j-1].ready);
-				ready=ready&&joueurs[j-1].ready;
-			}
-			if(ready){
-				//distribuer les tours
-				donne_tour();
-				//puis lancer le jeu
-				//client.broadcast.to('partie'+partie.id).emit("tour",{carte:0});
-
-			}else{
-				//on anonce que le joueur est pret
-				client.broadcast.to('partie'+partie.id).emit("pret",{joueur:client.joueur});
+			if(!partie){
+				client.emit("erreur",{message:"Partie non trouvée"});
+			}else{ 
+				for(var i=0;i<partie.joueurs.length;i++){
+					var j = partie.joueurs[i];
+					console.log("teste si le joueur "+j+" est ready :"+joueurs[j-1].ready);
+					ready=ready&&joueurs[j-1].ready;
+				}
+				if(ready){
+					//distribuer les tours
+					donne_tour();
+					//puis lancer le jeu
+				}else{
+					//on anonce que le joueur est pret
+					client.broadcast.to('partie'+partie.id).emit("pret",{joueur:joueur});
+				}
 			}
 
 		});
 
 		client.on('disconnect', function() {
-			console.log("deconnexion du joueur "+client.id);
-			var partie=parties[client.partiId];
+			console.log("deconnexion du joueur "+id);
 
+			console.log(partie);
 			//si c'est le master on vire la partie sinon juste le joueur
-			if(partie && partie.joueur[0]==id){
+			if(partie && partie.joueurs[0]==id){
 
 
 				client.broadcast.to('partie'+partie.id).emit("fin",{partie:partie});
@@ -270,13 +270,12 @@
 		/***************** Fonctions *************************/
 		
 		var donne_tour = function(){
-			var partie=parties[client.partiId];
 			//envoi un jeu à chaque participant du groupe
 			for(var i=0;i<partie.joueurs.length;i++){
 				
 				var j = partie.joueurs[i];
 
-				clients[j-1].emit("tour",{tas:partie.tas,cartes:creerDonne()});
+				clients[j-1].emit("tour",{tas:partie.tas,cartes:creerDonne(partie.tas)});
 
 
 			}
@@ -286,16 +285,14 @@
 
 
 		//créé un jeu en fonction du 'tas actuel' (cartes)
-		var creerDonne = function(){
-			var partie=parties[client.partiId];
+		var creerDonne = function(tas){
 
 			console.log("maintenant, la partie vaut :"+partie);
-			console.log(joueur);
 
 			//créé un jeu de 8 cartes
 			var jeu=[];
 			//si le tas existe récupère une carte dans le tas
-			if(partie.tas){jeu.push(partie.tas[(Math.random()*8) | 0].img);}
+			if(tas){jeu.push(tas[(Math.random()*8) | 0].img);}
 
 			while(jeu.length<8){
 				var n = (Math.random()*images.length) | 0;
@@ -306,9 +303,9 @@
 					if(jeu[j]==img){ok=false;break;}
 				}
 				//et éventuellement le tas
-				if(partie.tas){
+				if(tas){
 					for(var j=0;j<8;j++){
-						if(partie.tas[j].img==img){ok=false;break;}
+						if(tas[j].img==img){ok=false;break;}
 					}
 				}
 
@@ -321,6 +318,8 @@
 			var donne=[];
 			//choisi un alea pour placer l'image commune n'importe ou
 			var alea=(Math.random()*8) | 0;
+			//TODO vérif les valeurs pour trouver le bug des 7 valeurs
+			//!!!!!!
 			//debute à 1 pour l'image commune
 			for(var i=1;i<8;i++){
 				if(i==alea){
@@ -342,7 +341,7 @@
 			return donne;
 		}
 
-
+		/*
 		var cherchePartie = function(id){
 			for (var i = 0; i < parties.length; i++) {
 
@@ -353,7 +352,7 @@
 			}
 			return null;
 		}
-
+		*/
 
 	});
 })();

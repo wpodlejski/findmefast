@@ -7,72 +7,6 @@ var GAME=GAME||{};
 GAME.gameStart = (function(){
 
 
-	//test de portée de variable
-
-	var a=document.getElementById("newJeu");
-	var b=document.getElementById("monJeu");
-	a.client=1111;
-	b.client=2222;
-	
-	var event = new Event('evt');
-
-	var test1 = function(client){
-
-		var c=3333;
-
-
-		client.addEventListener("evt",function(){
-
-			c=6666*client.client;
-			console.log(client+" declenche evt , c vaut "+c);
-			test11();
-
-		});
-
-
-		var test11 = function(){
-
-			console.log("c vaut "+c+" dans la fonction test11 du client "+client.client);
-
-		};
-
-	};
-
-	test1(a);
-
-	test1(b);
-
-	a.dispatchEvent(event);
-
-
-	b.dispatchEvent(event);
-
-
-	console.log(" Fin de l'execution, a.c vaut "+a.c);
-	console.log(" Fin de l'execution, b.c vaut "+b.c);
-
-/*****************************************************************/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 	var pageCourante="#jeu";
 	var id=0;
 
@@ -148,7 +82,21 @@ GAME.gameStart = (function(){
 		switchPage("#jeu");
 
 		//passage en mode attente
-		document.querySelector("#jeu nav .pret .icon").style.background='red';	//passage en mode attente
+		var e = document.querySelector("#jeu nav .ready .icon");
+		removeClass(e,'pret');
+		addClass(e,'attente');	//passage en mode attente
+
+	});
+
+	// un nouveau joueur se connecte
+	sock.on("joueur",function(data){
+		console.log(data.joueur);
+
+  		var element=document.createElement("li");
+  		element.innerHTML='<a class="joueur'+data.joueur.id+' attente" href="rien" ><span class="icon" ></span>'+data.joueur.pseudo+'</a>';
+		
+		document.getElementById("listeJoueurs").appendChild(element);
+
 	});
 
 	// message reçu lorsqu'un joueur est prêt.
@@ -166,6 +114,37 @@ GAME.gameStart = (function(){
 	});
 
 
+	// message reçu lorsqu'un jeour est prêt
+	sock.on("pret",function(data){
+		console.log("Le joueur "+data.joueur.pseudo+" est prêt!");
+		
+		if(data.joueur.id==id){
+			var e=document.querySelector("#jeu nav .ready .icon");
+			removeClass(e,'attente');
+			addClass(e,'pret');	//passage en mode pret
+		}else{
+			var e=document.querySelector("#listeJoueurs .icon");
+			removeClass(e,'attente');
+			addClass(e,'pret');	//passage en mode pret
+		}
+
+		
+	});
+
+	// message reçu par le master lorsque tous les joueur sont prêt
+	sock.on("fin",function(data){
+		console.log("fin de partie");
+		//alert(data);
+		console.log("Le joueur "+data.joueur.pseudo+" met fin à la partie...");
+		
+		//TODO nettoyage
+		switchPage("#accueil");
+
+
+
+	});
+
+
 	// message reçu par le master lorsque tous les joueur sont prêt
 	sock.on("tour",function(data){
 		console.log("On recoit un tour :");
@@ -174,6 +153,11 @@ GAME.gameStart = (function(){
 		document.getElementById("newJeu").innerHTML=donne2html(data.tas);
 		//chargement du tas
 		document.getElementById("monJeu").innerHTML=donne2html(data.cartes);
+
+		//TODO uniquement lors du premier tour.....
+		var e=document.querySelector("#jeu nav .ready .icon");
+		removeClass(e,'attente');
+		addClass(e,'pret');	//passage en mode pret
 
 	});
 
@@ -237,11 +221,12 @@ GAME.gameStart = (function(){
 			if(target=="creer_partie"){
 				var nomJoueur = document.getElementById("nom_joueur").value;
 				var nomPartie = document.getElementById("nom_partie").value;
-
+				//TODO : vérifier la saisie
 				sock.emit("creerPartie",{nomJoueur:nomJoueur,nomPartie:nomPartie});
 				//TODO : afficher un sablier
 			}
 			if(target=="rejoindre_partie"){ //
+				//TODO verifier la saisie
 				var id = document.getElementById("liste_parties").value;
 				sock.emit("rejoindrePartie",{id:id});
 				//TODO : afficher un sablier
@@ -255,6 +240,28 @@ GAME.gameStart = (function(){
 	}
 
 });
+
+
+/* jouons avec les classes (sans JQuery)*/
+function hasClass(elem,className) {
+	return new RegExp(' '+className+' ').test(' '+elem.className+' ');
+}
+function addClass(elem,className) {
+	if (!hasClass(elem,className)) {
+		elem.className+=' '+className;
+	}
+}
+function removeClass(elem, className) {
+	//on epure les classes de l'élément
+	var newClass=' '+elem.className.replace(/[\t\r\n]/g,' ')+' ';
+	if (hasClass(elem, className)) {
+		while (newClass.indexOf(' '+className+' ')>=0) {
+			newClass=newClass.replace(' '+className+' ',' ');
+		}
+		//mise à jour
+		elem.className=newClass.replace(/^\s+|\s+$/g,'');
+	}
+}
 
 
 if(window.addEventListener){

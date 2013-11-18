@@ -52,6 +52,8 @@
 		</nav>
 		<article>
 			<form method="get" action="">
+				<label for="nom_joueur">Votre nom</label>
+				<input type="text" name="nom_joueur" id="nom_joueur_rejoindre" value="taskmaster" />
 				<label for="">Parties disponibles</label>
 				<select name="liste_parties" id="liste_parties">
 					<option >La super partie</option>
@@ -77,7 +79,7 @@
 			<ul>
 				<li><a class="accueil" href="#accueil">Accueil<span class="icon"></span></a></li>
 				<li><a class="abandon" href="#abandon">Abandon<span class="icon"></span></a></li>
-				<li><a class="pret" href="#pret">Prêt<span class="icon"></span></a></li>
+				<li><a class="ready" href="#pret">Prêt<span class="icon"></span></a></li>
 				<li><a class="demarrer" href="#demarrer">Démarrer<span class="icon"></span></a></li>
 			</ul>
 		</nav>
@@ -85,8 +87,7 @@
 			<div id="newJeu" class="carte" ></div>
 			<div id="monJeu" class="carte" ></div>
 			<div id="pseudo"></div>
-			<ul id="listeJoueurs" >
-			</ul>
+			<ul id="listeJoueurs" ></ul>
 		</article>
 	</section>
 

@@ -101,6 +101,14 @@ border-radius:50%;
  letter-spacing: normal;
  margin-right:-100%;
 }
+
+/* specificity war = pa bo */
+#jeu nav li a span.attente{background:red;}
+#jeu nav li a span.pret{background:green;}
+
+
+
+
 .carte{
 	position:absolute;
 	z-index:2;
@@ -115,13 +123,13 @@ border-radius:50%;
 #monJeu {bottom:0;}
 
 .carte ul{
-position:relative;
-width:200px;
-height:200px;
-margin:0 auto;
-border:1px solid #000;
-border-radius:2em;
-box-shadow:.2em .2em .2em #000;
+	position:relative;
+	width:200px;
+	height:200px;
+	margin:0 auto;
+	border:1px solid #000;
+	border-radius:2em;
+	box-shadow:.2em .2em .2em #000;
 }
 .carte ul li a{
 	position:absolute;
