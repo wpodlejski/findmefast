@@ -131,10 +131,10 @@ border-radius:50%;
 	border-radius:2em;
 	box-shadow:.2em .2em .2em #000;
 }
-.carte ul li a{
+.carte ul li a,.carte ul li div{
 	position:absolute;
 	display:block;
-	background:rgba(255,0,0,.1);
+	/*background:rgba(255,0,0,.1);*/
 	border-radius: 50% 50%;
 }
 

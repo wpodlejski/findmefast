@@ -105,7 +105,13 @@
 			if(!joueurs[i]){
 				id=i+1;
 
-				joueur ={id:id,master:0,pseudo:'',ready:0,score:0};
+				joueur ={id:id,
+					master:0,
+					pseudo:'',
+					ready:0,
+					donne:0,
+					carte:0,
+					score:0};
 
 				joueurs[id-1]=joueur;
 				clients[id-1]=client;
@@ -122,7 +128,7 @@
 		// les callback de emit sur le client mais ca compliquerais la compréhension
 		// p-ê  apres le POC ?
 
-		client.emit("accuse",{message:"ok game"});
+		client.emit("accuse",{message:"ok game",id:id});
 
 
 
@@ -159,8 +165,8 @@
 
 
 			console.log(joueur.pseudo+" créé le nouveau jeu "+partie.nom);
-
-			client.emit("jeu",{partie:partie,joueur:joueur});
+			var listeJoueurs=[{id:joueur.id,pseudo:joueur.pseudo}];
+			client.emit("jeu",{partie:partie,joueurs:listeJoueurs});
 
 			
 		});
@@ -173,7 +179,8 @@
 
 		client.on('rejoindrePartie', function(data) {
 
-			partie=parties[data.id];
+			partie=parties[data.idPartie];
+			joueur.pseudo=data.nomJoueur;
 			
 			if(!partie){
 				client.emit("jeu",{erreur:"Partie non trouvée"});
@@ -184,22 +191,29 @@
 				//TODO : un joueur ne peux pas jouer 2 parties en me temps
 
 
-				//TODO : le pb est la les clients se partagent la parties
-				// or JS en fait de copies...
-				client.partieId=data.id
+				//on ne stocke que l'id de la partie, pas l'objet
+				client.partieId=data.idPartie;
 
 				//ajout le joueur à la partie
-				parties[data.id].joueurs.push(joueur.id);
-				
+				parties[data.idPartie].joueurs.push(joueur.id);
 				//mise à jour de la copie locale????
 				//TODO : vérifier l'effet réel
-				partie=parties[data.id];
+				partie=parties[data.idPartie];
 
 				//on s'abonne au groupe correspondant à la partie
 				client.join('partie'+partie.id);
 
-				client.emit("jeu",{partie:partie,joueur:joueur});
-				console.log("le joueur "+joueur.pseudo+" rejoint la partie n°"+data.id);
+				//créé la liste des joueurs et de leur pseudo
+								//créé la liste des joueurs et de leur pseudo
+				var listeJoueurs=[];
+				for (var i=0;i<partie.joueurs.length;i++) {
+					var jid = partie.joueurs[i];
+					console.log("j'ajoute le joueur "+jid+" à la liste des joueurs");
+					listeJoueurs.push({id:joueurs[jid-1].id,pseudo:joueurs[jid-1].pseudo});
+				}
+
+				client.emit("jeu",{partie:partie,joueurs:listeJoueurs});
+				console.log("le joueur "+joueur.pseudo+" rejoint la partie n°"+data.idPartie);
 
 				//broadcast d'ajout de joueur
 				client.broadcast.to('partie'+partie.id).emit("joueur",{joueur:joueur});
@@ -236,20 +250,40 @@
 
 		});
 
+		client.on('reponse', function(data) {
+
+			console.log("le joueur "+joueur.pseudo+" trouve la carte "+joueur.donne[data.carte].img+" en "+data.rapid+"ms");
+			console.log("Sa carte commune était "+joueur.carte);
+
+		});
+
+
+
+		client.on('debug', function() {
+			client.emit("debug",{joueur:joueur,partie:partie,joueurs:joueurs,parties:parties});
+		});
+
+
 		client.on('disconnect', function() {
 			console.log("deconnexion du joueur "+id);
 
 			console.log(partie);
-			//si c'est le master on vire la partie sinon juste le joueur
-			if(partie && partie.joueurs[0]==id){
 
+			try{
 
-				client.broadcast.to('partie'+partie.id).emit("fin",{partie:partie});
-				
+				//si c'est le master on vire la partie sinon juste le joueur
+				if(partie && partie.joueurs && partie.joueurs.length>0 && partie.joueurs[0]==id){
 
-				//TODO //vider parties
-				parties.splice(array.indexOf(partie),1);
-				partie={};
+					client.broadcast.to('partie'+partie.id).emit("fin",{partie:partie});
+					
+					//TODO //vider parties
+					parties.splice(array.indexOf(partie),1);
+					partie={};
+
+				}else{
+					//Annonce la déconexion du joueur
+					client.broadcast.to('partie'+partie.id).emit("deconnexionJoueur",{joueur:joueur});
+				}
 
 				joueurs.splice(array.indexOf(joueur),1);
 				joueur={};
@@ -257,8 +291,13 @@
 				clients.splice(array.indexOf(client),1);
 				client={};
 
-				//que devient l'instance en cours (client) ????
-				//comment la flusher???
+
+			}catch(e){
+				console.log(e);
+				for (prop in e){console.log(e);}
+
+				//destruction de l'objet
+				for (prop in this){prop=null;}
 			}
 
 			//TODO vider joueur
@@ -275,7 +314,10 @@
 				
 				var j = partie.joueurs[i];
 
-				clients[j-1].emit("tour",{tas:partie.tas,cartes:creerDonne(partie.tas)});
+				var donne=creerDonne(partie.tas);
+				joueurs[j-1].donne=donne;
+
+				clients[j-1].emit("tour",{tas:partie.tas,cartes:donne});
 
 
 			}
@@ -292,7 +334,13 @@
 			//créé un jeu de 8 cartes
 			var jeu=[];
 			//si le tas existe récupère une carte dans le tas
-			if(tas){jeu.push(tas[(Math.random()*8) | 0].img);}
+			if(tas){
+				var carte = tas[(Math.random()*8) | 0].img;
+				jeu.push(carte);
+				joueur.carte=carte;
+			}
+
+			//la carte commune de ce tirage est 
 
 			while(jeu.length<8){
 				var n = (Math.random()*images.length) | 0;
@@ -308,28 +356,27 @@
 						if(tas[j].img==img){ok=false;break;}
 					}
 				}
-
 				if(ok){jeu.push(img);}
 			}
 
-			//console.log("Le jeu tiré est :");
-			//console.log(jeu);
+			//melange des 8 valeurs
+			//TODO trouver un algo certainement plus efficace
+
+			console.log(jeu);
 
 			var donne=[];
-			//choisi un alea pour placer l'image commune n'importe ou
-			var alea=(Math.random()*8) | 0;
-			//TODO vérif les valeurs pour trouver le bug des 7 valeurs
-			//!!!!!!
-			//debute à 1 pour l'image commune
-			for(var i=1;i<8;i++){
-				if(i==alea){
-					donne.push(
-					{img:jeu[0],
-					 x:templates[0][0][0],
-					 y:templates[0][0][1],
-					 r:templates[0][0][2],
-					 orientation:((Math.random()*360) | 0)});
-				}
+			for (var i=0;i<8;i++){
+				var j=(Math.random()*8-i) | 0;
+           		//on swap
+            	var tmp = jeu[i];
+            	jeu[i]=jeu[i+j];
+            	jeu[i+j]=tmp;
+            	//on rempli la donne
+				//TODO si on le fait ici on a de nombreux doublon???
+				// comprend pas p?
+        	}	
+        	// du coup re-boucle
+        	for (var i=0;i<8;i++){
 				donne.push(
 					{img:jeu[i],
 					 x:templates[0][i][0],
@@ -337,7 +384,11 @@
 					 r:templates[0][i][2],
 					 orientation:((Math.random()*360) | 0)}
 				);
-			}
+        	}
+
+
+        	console.log(jeu);
+
 			return donne;
 		}
 

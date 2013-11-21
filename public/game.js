@@ -9,53 +9,14 @@ GAME.gameStart = (function(){
 
 	var pageCourante="#jeu";
 	var id=0;
-
-	/*
-	var pong; //le thread
-	var width=800;
-	var height=800;
-	var but=100; // dimension d'un 1/2 but
-	var speed=10;
-	var ptmur=1;
-	var ptbut=10;
-	var drag=false;
-	var joueur=0;
-
-	var master=false;
-	var raq=[];// les joueurs (le raq[0] n'existe pas)
-	var ball={x:width/2,y:height/2,a:0,b:0,color:"rgb(255,0,0)"}
-
-	var elapsedtime=0;
-
-	$("#ready").attr('disabled', false);
-	$("#go").attr('disabled', true);
-	*/
-
-
+	var timer=0;
+	
 	// ETAPE 1 : la connexion
-	var sock= io.connect();
-
-	//affiche l'ecran d'accueil
+	var sock=io.connect();
 
 
-
-	//le reste est asynchrone
-	/*******************************************************/
-
-	// sock.emit("ballpos",{x:,y:,score:});
-	// sock.emit("pseudo",{pseudo:monpseudo});
-
-	/*
-	function majscore(){
-		//les scores
-		//TODO faire la mise a jour uniquement en cas de changement de score...
-		for(var i=1;i<=4;i++){
-			if(raq[i]){
-				$("#joueur"+i+" input").val(raq[i].score);
-			}
-		}
-	}
-	*/
+	//TODO : précharger les svg pour éviter le FOUC
+	
 
 
 	/****************** Partie socket **************************/
@@ -78,8 +39,24 @@ GAME.gameStart = (function(){
 		}
 		console.log(data.partie);
 
-		document.getElementById("pseudo").innerHTML=data.joueur.pseudo;
 		switchPage("#jeu");
+
+		//affichage des joueurs
+		for (var i = 0; i < data.joueurs.length; i++) {
+			var j = data.joueurs[i];
+
+
+			console.log("Affichage des joueurs : "+j.id+" / "+id);
+
+			if(j.id==id){
+				document.getElementById("pseudo").innerHTML=j.pseudo;
+			}else{
+				var element=document.createElement("li");
+				element.innerHTML='<a class="joueur'+j.id+' attente" href="rien" ><span class="icon" ></span>'+j.pseudo+'</a>';
+			
+				document.getElementById("listeJoueurs").appendChild(element);
+			}
+		};
 
 		//passage en mode attente
 		var e = document.querySelector("#jeu nav .ready .icon");
@@ -114,7 +91,7 @@ GAME.gameStart = (function(){
 	});
 
 
-	// message reçu lorsqu'un jeour est prêt
+	// message reçu lorsqu'un joueur est prêt
 	sock.on("pret",function(data){
 		console.log("Le joueur "+data.joueur.pseudo+" est prêt!");
 		
@@ -127,8 +104,6 @@ GAME.gameStart = (function(){
 			removeClass(e,'attente');
 			addClass(e,'pret');	//passage en mode pret
 		}
-
-		
 	});
 
 	// message reçu par le master lorsque tous les joueur sont prêt
@@ -145,21 +120,42 @@ GAME.gameStart = (function(){
 	});
 
 
-	// message reçu par le master lorsque tous les joueur sont prêt
+	// un nouveau tour.
 	sock.on("tour",function(data){
 		console.log("On recoit un tour :");
 		//alert(data);
 
-		document.getElementById("newJeu").innerHTML=donne2html(data.tas);
 		//chargement du tas
-		document.getElementById("monJeu").innerHTML=donne2html(data.cartes);
+		document.getElementById("newJeu").innerHTML=donne2html(data.tas,false);
+		//chargement du jeu
+		document.getElementById("monJeu").innerHTML=donne2html(data.cartes,true);
+		timer=Date.now();
 
-		//TODO uniquement lors du premier tour.....
-		var e=document.querySelector("#jeu nav .ready .icon");
-		removeClass(e,'attente');
-		addClass(e,'pret');	//passage en mode pret
+		var liens = document.querySelectorAll('#jeu article a');
+		for (var i = 0; i < liens.length; i++) {
+			//TODO : les listeners sont ils detruits lorsque le innerHTML est remplacé ?
+	 		liens[i].addEventListener("click",function(event){
+	 			event.preventDefault();
+	 			var target = event.currentTarget.attributes['href'].value || '#accueil';
+				console.log(target);
+				//TODO deplacer dans une fonction
+				var rapid=Date.now()-timer;
+				var carte=target.substr(-1);
+				sock.emit("reponse",{carte:carte,rapid:rapid});
 
+				//TODO affiche wait
+
+			},false);
+	 	}
 	});
+
+
+	sock.on("debug",function(data){
+		console.log("DEBUG");
+		console.log(data);
+	});
+
+
 
 
 	/* fonctions */
@@ -177,17 +173,28 @@ GAME.gameStart = (function(){
 	}
 
 
-	var donne2html = function(cartes){
+	var donne2html = function(cartes,isJoueur){
 
 		var html='<ul>';
 
 		for (var i =0;i<cartes.length;i++) {
-			html+='<li><a href="carte'+i+'" style="left:'
-			+(cartes[i].x-cartes[i].r)+'%;top:'+(cartes[i].y-cartes[i].r)
-			+'%;width:'+cartes[i].r*2+'%;height:'+cartes[i].r*2
-			+'%;" ><img src="images/'+cartes[i].img
+
+			var htmlImg='<img src="images/'+cartes[i].img
 			+'" alt="'+i+'" style="width:100%;height:100%;transform:rotate('
-			+cartes[i].orientation+'deg);" /></a></li>';
+			+cartes[i].orientation+'deg);" />';
+
+			if(isJoueur){
+				htmlImg = '<a href="carte'+i+'" style="left:'
+					+(cartes[i].x-cartes[i].r)+'%;top:'+(cartes[i].y-cartes[i].r)
+					+'%;width:'+cartes[i].r*2+'%;height:'+cartes[i].r*2
+					+'%;" >'+htmlImg+'</a>';
+			}else{
+				htmlImg = '<div style="left:'+(cartes[i].x-cartes[i].r)
+					+'%;top:'+(cartes[i].y-cartes[i].r)
+					+'%;width:'+cartes[i].r*2+'%;height:'+cartes[i].r*2
+					+'%;" >'+htmlImg+'</div>';
+			}
+			html+='<li>'+htmlImg+'</li>';
 		};
 		html+='</ul>';
 
@@ -227,13 +234,21 @@ GAME.gameStart = (function(){
 			}
 			if(target=="rejoindre_partie"){ //
 				//TODO verifier la saisie
-				var id = document.getElementById("liste_parties").value;
-				sock.emit("rejoindrePartie",{id:id});
+				var idPartie = document.getElementById("liste_parties").value;
+				var nomJoueur = document.getElementById("nom_joueur_rejoindre").value;
+				sock.emit("rejoindrePartie",{idPartie:idPartie,nomJoueur:nomJoueur});
 				//TODO : afficher un sablier
 			}
-			if(target=="#pret"){ //
+			if(target=="#pret"){
+
+				var e=document.querySelector("#jeu nav .ready .icon");
+				removeClass(e,'attente');
+				addClass(e,'pret');	//passage en mode pret
 				sock.emit("pret",{});
 				//TODO : afficher un sablier
+			}
+			if(target=="debug"){
+				sock.emit("debug",{});
 			}
 
 		},false);
