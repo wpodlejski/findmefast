@@ -8,6 +8,10 @@
 	var app = express();
 	var server = require('http').createServer(app);
 	var io=require('socket.io').listen(server);
+
+	//limite le debug verbeux de socket.io
+	io.set('log level', 1);
+
 	//var width=800;
 	//var height=800;
 
@@ -80,14 +84,12 @@
 
 		
 		var joueur={};
-		var partie={};
+		var partie={truc:999};// rustine de test
 		
-		//client.joueur=joueur;
-
 
 		//nombre de joueur maxi ou partie commencée
 		/*
-	    if(nbjoueurs>6 || partie){
+	    if(nbjoueurs>8 || partie){
 			client.emit("accuse",{id:0,message:"jeux plein : mode spectateur"});
 			return;
 	    }
@@ -141,20 +143,31 @@
 			joueur.pseudo=data.nomJoueur;
 
 			//ATTENTION la partie contient les id des joueurs!
+			//TODO garder un historique des tours???
+			// id = id de la partie
+			// nom = nom de la partie
+			// joueurs = liste des id des joueurs participants
+			// tas = carte du tas
+			// reponses = réponses éventuelles des joueurs du tas en cours
+			//		razé à chaqe nouveau tas
+			// attenteReponse : timeout d'attente de la réponse des autres joueurs
+			//
 			partie={
 				id:parties.length,
 				nom:data.nomPartie,
 				joueurs:[id],
-				tas:0
+				tas:0,
+				reponses:[],
+				attenteReponse:0,
 			};
 
 			console.log("On créé la partie "+partie.nom+" pour le joueur "
 				+joueurs[partie.joueurs[0]-1].pseudo+" dont l id est "+joueur.id);
 
 			// creerDonne qui teste partie.tas ?????
-			partie.tas=creerDonne(0);
-
-			parties.push(partie);
+			// TODO : le tas est créé a partir du jeu des jouaurs maintenenat
+			//partie.tas=creerDonne(0);
+			//parties.push(partie);
 
 			//on stocke l'ID de la partie créée
 			//client.partieId=parties.indexOf(partie);
@@ -165,8 +178,8 @@
 
 
 			console.log(joueur.pseudo+" créé le nouveau jeu "+partie.nom);
-			var listeJoueurs=[{id:joueur.id,pseudo:joueur.pseudo}];
-			client.emit("jeu",{partie:partie,joueurs:listeJoueurs});
+			//liste des joueurs pour cette partie ( forcément seul le joueur créateur !)
+			client.emit("jeu",{partie:partie,joueurs:listeJoueurs()});
 
 			
 		});
@@ -194,25 +207,16 @@
 				//on ne stocke que l'id de la partie, pas l'objet
 				client.partieId=data.idPartie;
 
-				//ajout le joueur à la partie
+				//ajoute le joueur à la partie
 				parties[data.idPartie].joueurs.push(joueur.id);
 				//mise à jour de la copie locale????
-				//TODO : vérifier l'effet réel
+				//!!!!!!!! TODO : vérifier l'effet réel
 				partie=parties[data.idPartie];
 
 				//on s'abonne au groupe correspondant à la partie
 				client.join('partie'+partie.id);
 
-				//créé la liste des joueurs et de leur pseudo
-								//créé la liste des joueurs et de leur pseudo
-				var listeJoueurs=[];
-				for (var i=0;i<partie.joueurs.length;i++) {
-					var jid = partie.joueurs[i];
-					console.log("j'ajoute le joueur "+jid+" à la liste des joueurs");
-					listeJoueurs.push({id:joueurs[jid-1].id,pseudo:joueurs[jid-1].pseudo});
-				}
-
-				client.emit("jeu",{partie:partie,joueurs:listeJoueurs});
+				client.emit("jeu",{partie:partie,joueurs:listeJoueurs()});
 				console.log("le joueur "+joueur.pseudo+" rejoint la partie n°"+data.idPartie);
 
 				//broadcast d'ajout de joueur
@@ -239,9 +243,21 @@
 					ready=ready&&joueurs[j-1].ready;
 				}
 				if(ready){
-					//distribuer les tours
-					donne_tour();
-					//puis lancer le jeu
+					//distribution initiale pour les joueurs
+
+					for(var i=0;i<partie.joueurs.length;i++){
+						var j=partie.joueurs[i];
+						joueurs[j-1].donne=creerDonne();
+					}
+					//création du tas
+					partie.tas=creerTas();
+					//distribution des jeux
+					for(var i=0;i<partie.joueurs.length;i++){
+						var j=partie.joueurs[i];
+						var donne=joueurs[j-1].donne;
+						clients[j-1].emit("tour",{tas:partie.tas,cartes:donne,idVainqueur:0,joueurs:listeJoueurs()});
+					}
+					//C'est parti!!!!!!
 				}else{
 					//on anonce que le joueur est pret
 					client.broadcast.to('partie'+partie.id).emit("pret",{joueur:joueur});
@@ -254,6 +270,68 @@
 
 			console.log("le joueur "+joueur.pseudo+" trouve la carte "+joueur.donne[data.carte].img+" en "+data.rapid+"ms");
 			console.log("Sa carte commune était "+joueur.carte);
+			
+			//traitement du jeu
+			if(joueur.donne[data.carte].img==joueur.carte){
+				//on ajoute sa réponse
+				//TODO : bug en prévision si on ajoute sa réponse pendant
+				//  l'execution du setTimeout attenteReponse!!!!!!
+				partie.reponses.push({id:joueur.id,rapid:data.rapid});
+				// si on est le premier à répondre OK
+				// Attente de 1s pour les ex-aequo
+				if(!partie.attenteReponse){
+					partie.attenteReponse = setTimeout(function(){
+						//teste le joueur le plus rapide
+
+						var idRapido=0;
+						var virRapido=999999999;
+
+						for (var i = 0; i < partie.reponses.length; i++) {
+							var v = partie.reponses[i].rapid;
+							if(v<virRapido){
+								virRapido=v;
+								idRapido=partie.reponses[i].id;
+							}
+						};
+
+						console.log("Le joueur le plus rapide est "+joueurs[idRapido-1].pseudo);
+
+						//on augmente le score
+						joueurs[idRapido-1].score++;
+						//nouveau jeu pour le joueur
+						//normalement il prends le tas comme nouveau jeu
+						joueurs[idRapido-1].donne=partie.tas;
+
+						//console.log("nouveau jeu du joueur avant le nouveau tas");
+						//console.log(joueurs[idRapido-1].donne);
+
+						//nouveau tas
+						partie.tas=creerTas();
+						
+						//console.log("nouveau jeu du joueur APRES le nouveau tas");
+						//console.log(joueurs[idRapido-1].donne);
+
+						//RAZ des réponses
+						partie.reponses=[];
+						partie.attenteReponse=0;// TODO faut l un clearTimeout???
+
+						for(var i=0;i<partie.joueurs.length;i++){
+							var j=partie.joueurs[i];
+							var donne=joueurs[j-1].donne;
+							clients[j-1].emit("tour",{tas:partie.tas,cartes:donne,idVainqueur:idRapido,joueurs:listeJoueurs()});
+						}
+
+					},1000);
+				}else{
+					//on a trouvé la réponse mais on était pas le premier
+					// on attends donc la 1s pour comparer
+					//client.emit("reponse",{reponse:"attente"});
+				}
+
+			}else{
+				//trompé
+				client.emit("mauvaisereponse",{});
+			}
 
 		});
 
@@ -281,26 +359,34 @@
 					partie={};
 
 				}else{
-					//Annonce la déconexion du joueur
+					//Annonce la déconnexion du joueur
 					client.broadcast.to('partie'+partie.id).emit("deconnexionJoueur",{joueur:joueur});
 				}
 
-				joueurs.splice(array.indexOf(joueur),1);
+				console.log("je vais essayer de virer le joueur : "+joueur.id);
+				console.log(joueurs);
+
+				joueurs.splice(joueurs.indexOf(joueur),1);
 				joueur={};
 
-				clients.splice(array.indexOf(client),1);
+				console.log(joueurs);
+				console.log("Fin");
+
+				clients.splice(joueurs.indexOf(client),1);
 				client={};
 
 
 			}catch(e){
+				console.log("Partie : ");
+				console.log(partie);
 				console.log(e);
-				for (prop in e){console.log(e);}
-
 				//destruction de l'objet
 				for (prop in this){prop=null;}
 			}
 
-			//TODO vider joueur
+
+			//console.log(parties);
+			//console.log(joueurs);
 			//client.broadcast.emit("joueur",{num:-id,message:""});
 
 		});
@@ -308,39 +394,45 @@
 
 		/***************** Fonctions *************************/
 		
-		var donne_tour = function(){
-			//envoi un jeu à chaque participant du groupe
+
+		var listeJoueurs = function(){
+		//créé la liste des joueurs et de leur pseudo
+			var listeJoueurs=[];
+			for (var i=0;i<partie.joueurs.length;i++) {
+				var jid = partie.joueurs[i];
+				//console.log("j'ajoute le joueur "+jid+" à la liste des joueurs");
+				listeJoueurs.push({id:joueurs[jid-1].id,pseudo:joueurs[jid-1].pseudo,score:joueurs[jid-1].score});
+			}
+
+			return listeJoueurs;
+		};
+
+/*
+		var donne_tour = function(vainqueur){
+			//créé le jeu pour chaque joueur soit c'est le vainqueur soit on touche à rien...
+
 			for(var i=0;i<partie.joueurs.length;i++){
-				
-				var j = partie.joueurs[i];
-
-				var donne=creerDonne(partie.tas);
-				joueurs[j-1].donne=donne;
-
-				clients[j-1].emit("tour",{tas:partie.tas,cartes:donne});
-
-
+				var j=partie.joueurs[i];
+				//on récupère la donne actuelle du joueur
+				var donne=joueurs[j-1].donne;
+				if(vainqueur && vainqueur==j.id){
+					//seul le joueur gagnant a un nouveau jeu
+					donne=creerDonne();
+					joueurs[j-1].donne=donne;
+				}
 			}
+		};
+*/
 
-		}
+		//TODO : En fait c'est plus complexe que ca, car le nouveau tas doit tenir compte des jeux des
+		//autres  joueurs, seul le vainqueur prend le nouveau tas !!! 
 
+		//créé un jeu sans tenir compte du tas
+		//il est plus simple de générere le tas en fonction du jeu des joueurs
+		//retourne la donne
+		var creerDonne = function(){
 
-
-		//créé un jeu en fonction du 'tas actuel' (cartes)
-		var creerDonne = function(tas){
-
-			console.log("maintenant, la partie vaut :"+partie);
-
-			//créé un jeu de 8 cartes
 			var jeu=[];
-			//si le tas existe récupère une carte dans le tas
-			if(tas){
-				var carte = tas[(Math.random()*8) | 0].img;
-				jeu.push(carte);
-				joueur.carte=carte;
-			}
-
-			//la carte commune de ce tirage est 
 
 			while(jeu.length<8){
 				var n = (Math.random()*images.length) | 0;
@@ -350,33 +442,30 @@
 				for(var j=0;j<jeu.length;j++){
 					if(jeu[j]==img){ok=false;break;}
 				}
-				//et éventuellement le tas
-				if(tas){
-					for(var j=0;j<8;j++){
-						if(tas[j].img==img){ok=false;break;}
-					}
-				}
 				if(ok){jeu.push(img);}
 			}
 
 			//melange des 8 valeurs
 			//TODO trouver un algo certainement plus efficace
-
-			console.log(jeu);
+			//console.log(jeu);
 
 			var donne=[];
+
+			
 			for (var i=0;i<8;i++){
 				var j=(Math.random()*8-i) | 0;
-           		//on swap
-            	var tmp = jeu[i];
-            	jeu[i]=jeu[i+j];
-            	jeu[i+j]=tmp;
-            	//on rempli la donne
+					//on swap
+				var tmp = jeu[i];
+				jeu[i]=jeu[i+j];
+				jeu[i+j]=tmp;
+				//on rempli la donne
 				//TODO si on le fait ici on a de nombreux doublon???
 				// comprend pas p?
-        	}	
-        	// du coup re-boucle
-        	for (var i=0;i<8;i++){
+			}	
+			
+
+			// du coup re-boucle
+			for (var i=0;i<8;i++){
 				donne.push(
 					{img:jeu[i],
 					 x:templates[0][i][0],
@@ -384,13 +473,116 @@
 					 r:templates[0][i][2],
 					 orientation:((Math.random()*360) | 0)}
 				);
-        	}
-
-
-        	console.log(jeu);
+			}
 
 			return donne;
-		}
+		};
+
+		//methode similaire à la précédente, 
+		//génére le tas en fonction des cartes des joueurs
+		// TODO a refactorer efficacement
+		var creerTas = function(){
+
+			//prends des cartes dans le jeu des joueurs
+
+			//console.log("Dans creerTas, la partie vaut : ");
+			//console.log(partie);
+
+			var jeu=[];
+
+			for (var i = 0; i < partie.joueurs.length; i++) {
+				var jou = joueurs[partie.joueurs[i]-1];
+				while(true){
+					//une carte au hasard dans le jeu du joueur
+					var n = (Math.random()*8) | 0;		
+					var img = jou.donne[n].img;
+					var ok=true;
+					//on vérifie qu'elle n'est pas déjà dans le jeu
+					for(var j=0;j<jeu.length;j++){
+						if(jeu[j]==img){ok=false;break;}
+					}
+					if(ok){
+						jeu.push(img);
+						//mise à jour de la carte gagnante du joueur
+						console.log("Carte commune du joueur "+jou.id+" : "+img);
+						jou.carte=img;
+						break;
+					}
+				}
+
+			};
+
+			//console.log("Avec les jeux des joueurs, la tas vaut pour l'instant :");
+			//console.log(jeu);
+
+			//on comble avec des cartes qui ne sont ni sur la carte, ni dans le jeu des joueurs
+
+			while(jeu.length<8){
+				var n = (Math.random()*images.length) | 0;
+				var img = images[n];
+				var ok=true;
+				//teste les cartes précédentes
+				for(var j=0;j<jeu.length;j++){
+					//console.log("--- comparo jeu :"+jeu[j]+" avec "+img);
+					if(jeu[j]==img){
+						//console.log("Trouvée carte identique : "+img);
+						ok=false;break;}
+				}
+				//puis les cartes des joueurs
+				for (var i = 0; i < partie.joueurs.length; i++) {
+					var k=partie.joueurs[i]-1;
+					var jou = joueurs[k];
+					for(var j=0;j<jou.donne.length;j++){
+						//console.log("------- comparo joueur "+k+" :"+jou.donne[j].img+" avec "+img);
+						if(jou.donne[j].img==img){
+							//console.log("Trouvée carte identique : "+img);
+							ok=false;break;}
+					}
+				}
+
+
+				if(ok){
+					//console.log("ajout d'une nouvelle carte : "+img);
+					jeu.push(img);
+				}
+			}
+
+			//melange des 8 valeurs
+			//TODO trouver un algo certainement plus efficace
+			//console.log("le jeu complet avant mélangeage pour le Tas :");
+			//console.log(jeu);
+
+			var tas=[];
+
+			// j'enleve le mélange pour debugger
+			for (var i=0;i<8;i++){
+				var j=(Math.random()*8-i) | 0;
+					//on swap
+				var tmp = jeu[i];
+				jeu[i]=jeu[i+j];
+				jeu[i+j]=tmp;
+				//on rempli la donne
+				//TODO si on le fait ici on a de nombreux doublon???
+				// comprend pas p?
+			}	
+			
+
+			// du coup re-boucle
+			for (var i=0;i<8;i++){
+				tas.push(
+					{img:jeu[i],
+					 x:templates[0][i][0],
+					 y:templates[0][i][1],
+					 r:templates[0][i][2],
+					 orientation:((Math.random()*360) | 0)}
+				);
+			}
+
+			return tas;
+
+		};
+
+
 
 		/*
 		var cherchePartie = function(id){

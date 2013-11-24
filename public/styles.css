@@ -46,12 +46,11 @@ section nav li a{
  background-color:rgba(255,255,255,0);
  border-radius:2em;
  letter-spacing: normal;
- -moz-transition: all .5s;
  transition: all .5s ease-out;
 
 
 }
-section nav li a:hover{
+section  li a:hover{
  letter-spacing: .8em;
  background-color:#fff;
 }
@@ -73,39 +72,72 @@ margin:auto;
 #jeu h2 {
 	display:none;
 }
-#jeu nav ul {
+#jeu nav ul,
+#listeJoueurs {
 	position:absolute;
 	z-index:3;
+
+
+}
+#jeu nav ul{
 	right:100%;
 	bottom:1em;
 	margin-right:-1em;
-	text-align:right;
+	text-align:right;	
 }
-#jeu nav li a{
+/* Liste des joueurs */
+#listeJoueurs{
+	left:100%;
+	top:1em;
+	margin-left:-1em;
+	text-align:left;
+}
+
+#jeu nav li a,
+#listeJoueurs li a{
 	border-radius:.5em;
-	padding:0 0 0 .5em;
+	padding:0 .5em 0 .5em;
 	white-space: nowrap;
+	letter-spacing: normal;
+
+ display:block;
+ color:#000;
+ text-decoration:none;
+ padding:.1em;
+ background-color:rgba(255,255,255,0);
+ border-radius:2em;
+ letter-spacing: normal;
+ transition: all .5s ease-out;
 
 }
-#jeu nav li a span{
+
+#jeu nav li a span,
+#listeJoueurs li a span{
 display:inline-block;
 width:2em;
 height:2em;
 background:white;
 vertical-align: middle;
-margin-left:.3em;
 border-radius:50%;
 }
 
+
+#jeu nav li a span{margin-left:.3em;}
+#listeJoueurs li a span{margin-right:.3em;}
+
+
 #jeu nav li a:hover{
- letter-spacing: normal;
  margin-right:-100%;
+}
+#listeJoueurs li a:hover{
+ margin-left:-100%;
 }
 
 /* specificity war = pa bo */
-#jeu nav li a span.attente{background:red;}
-#jeu nav li a span.pret{background:green;}
-
+#jeu nav li a span.attente,
+#listeJoueurs li a span.attente{background:red;}
+#jeu nav li a span.pret,
+#listeJoueurs li a span.pret{background:green;}
 
 
 
@@ -136,6 +168,20 @@ border-radius:50%;
 	display:block;
 	/*background:rgba(255,0,0,.1);*/
 	border-radius: 50% 50%;
+}
+
+#monJeu{
+	background-color: transparent;
+	transition: background-color 1s;
+}
+
+#monJeu.gagnant {
+	background-color: green;
+	transition: background-color .2s;
+}
+#monJeu.perdant{
+	background-color: red;
+	transition: background-color .2s;
 }
 
 

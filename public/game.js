@@ -26,12 +26,13 @@ GAME.gameStart = (function(){
 	sock.on("accuse",function(data){
 		//console.log(data);
 		id=data.id;
-		//on ramene à l'accueil
+		//on ramene à l'accueil en faisant du ménage
+		document.getElementById("listeJoueurs").innerHTML="";
 		switchPage("#accueil");
 
 	});
 
-
+	// message recu declenchant le passage en mode jeu
 	sock.on("jeu",function(data){
 		if(data.erreur){
 			alert("Erreur :"+data.erreur);
@@ -48,14 +49,11 @@ GAME.gameStart = (function(){
 
 			console.log("Affichage des joueurs : "+j.id+" / "+id);
 
-			if(j.id==id){
-				document.getElementById("pseudo").innerHTML=j.pseudo;
-			}else{
-				var element=document.createElement("li");
-				element.innerHTML='<a class="joueur'+j.id+' attente" href="rien" ><span class="icon" ></span>'+j.pseudo+'</a>';
+			var element=document.createElement("li");
+			element.innerHTML='<a class="joueur'+j.id+' attente" href="rien" ><span class="icon" ></span>'+j.pseudo+'</a>';
 			
-				document.getElementById("listeJoueurs").appendChild(element);
-			}
+			document.getElementById("listeJoueurs").appendChild(element);
+
 		};
 
 		//passage en mode attente
@@ -65,18 +63,18 @@ GAME.gameStart = (function(){
 
 	});
 
-	// un nouveau joueur se connecte
+	// info : un nouveau joueur se connecte dans notre partie
 	sock.on("joueur",function(data){
 		console.log(data.joueur);
 
   		var element=document.createElement("li");
-  		element.innerHTML='<a class="joueur'+data.joueur.id+' attente" href="rien" ><span class="icon" ></span>'+data.joueur.pseudo+'</a>';
+  		element.innerHTML='<a class="joueur'+data.joueur.id+'" href="rien" ><span class="icon attente" ></span>'+data.joueur.pseudo+'</a>';
 		
 		document.getElementById("listeJoueurs").appendChild(element);
 
 	});
 
-	// message reçu lorsqu'un joueur est prêt.
+	// message reçu pour lister les partie afin d'en rejoindre une
 	sock.on("listeParties",function(data){
 		console.log(data);
 
@@ -91,46 +89,57 @@ GAME.gameStart = (function(){
 	});
 
 
-	// message reçu lorsqu'un joueur est prêt
+	// message reçu lorsqu'un joueur en mode jeu est prêt
 	sock.on("pret",function(data){
 		console.log("Le joueur "+data.joueur.pseudo+" est prêt!");
 		
-		if(data.joueur.id==id){
-			var e=document.querySelector("#jeu nav .ready .icon");
-			removeClass(e,'attente');
-			addClass(e,'pret');	//passage en mode pret
-		}else{
-			var e=document.querySelector("#listeJoueurs .icon");
-			removeClass(e,'attente');
-			addClass(e,'pret');	//passage en mode pret
-		}
+		var e=document.querySelector("#listeJoueurs .joueur"+data.joueur.id+" .icon");
+
+		removeClass(e,'attente');
+		addClass(e,'pret');
+		
+
+
 	});
 
-	// message reçu par le master lorsque tous les joueur sont prêt
+	// message reçu indiquant la fin de la partie (le chef de partie s'est deconnecté)
 	sock.on("fin",function(data){
 		console.log("fin de partie");
 		//alert(data);
 		console.log("Le joueur "+data.joueur.pseudo+" met fin à la partie...");
 		
 		//TODO nettoyage
+		//on ramene à l'accueil en faisant du ménage
+		document.getElementById("listeJoueurs").innerHTML="";
 		switchPage("#accueil");
-
-
-
 	});
 
 
-	// un nouveau tour.
+	// on recoit un nouveau tour.
 	sock.on("tour",function(data){
 		console.log("On recoit un tour :");
-		//alert(data);
+		console.log(data);
+
+		//si je suis le vainqueur
+		if(data.idVainqueur==id){
+			console.log("Bonne reponse");		
+			var e=document.getElementById("monJeu");
+
+			//removeClass(e,'perdant');
+			addClass(e,'gagnant');
+			setTimeout(function(){removeClass(e,'gagnant');},100);
+		}
+
 
 		//chargement du tas
 		document.getElementById("newJeu").innerHTML=donne2html(data.tas,false);
 		//chargement du jeu
 		document.getElementById("monJeu").innerHTML=donne2html(data.cartes,true);
+		
+		//initialisation du timer pour calculer le temps de réaction du joueur
 		timer=Date.now();
 
+		//création des liens pour les images
 		var liens = document.querySelectorAll('#jeu article a');
 		for (var i = 0; i < liens.length; i++) {
 			//TODO : les listeners sont ils detruits lorsque le innerHTML est remplacé ?
@@ -139,6 +148,8 @@ GAME.gameStart = (function(){
 	 			var target = event.currentTarget.attributes['href'].value || '#accueil';
 				console.log(target);
 				//TODO deplacer dans une fonction
+
+				//calcul du temps de réaction
 				var rapid=Date.now()-timer;
 				var carte=target.substr(-1);
 				sock.emit("reponse",{carte:carte,rapid:rapid});
@@ -149,7 +160,20 @@ GAME.gameStart = (function(){
 	 	}
 	});
 
+	sock.on("mauvaisereponse",function(data){
+		console.log("mauvaisereponse");		
+		var e=document.getElementById("monJeu");
 
+		//removeClass(e,'vainqueur');
+		addClass(e,'perdant');
+		setTimeout(function(){removeClass(e,'perdant');},100);
+
+
+	});
+
+
+
+	//debug
 	sock.on("debug",function(data){
 		console.log("DEBUG");
 		console.log(data);
@@ -158,52 +182,11 @@ GAME.gameStart = (function(){
 
 
 
-	/* fonctions */
 
-	var switchPage = function(newpage){
-		var courante = document.querySelector(pageCourante);
-		//courante.style.zIndex = 0;
-		courante.style.left = '-100%';
-		var nouvelle = document.querySelector(newpage);
-		//nouvelle.style.zIndex = 1;
-		nouvelle.style.left = '0';
-		pageCourante=newpage;
-
-
-	}
-
-
-	var donne2html = function(cartes,isJoueur){
-
-		var html='<ul>';
-
-		for (var i =0;i<cartes.length;i++) {
-
-			var htmlImg='<img src="images/'+cartes[i].img
-			+'" alt="'+i+'" style="width:100%;height:100%;transform:rotate('
-			+cartes[i].orientation+'deg);" />';
-
-			if(isJoueur){
-				htmlImg = '<a href="carte'+i+'" style="left:'
-					+(cartes[i].x-cartes[i].r)+'%;top:'+(cartes[i].y-cartes[i].r)
-					+'%;width:'+cartes[i].r*2+'%;height:'+cartes[i].r*2
-					+'%;" >'+htmlImg+'</a>';
-			}else{
-				htmlImg = '<div style="left:'+(cartes[i].x-cartes[i].r)
-					+'%;top:'+(cartes[i].y-cartes[i].r)
-					+'%;width:'+cartes[i].r*2+'%;height:'+cartes[i].r*2
-					+'%;" >'+htmlImg+'</div>';
-			}
-			html+='<li>'+htmlImg+'</li>';
-		};
-		html+='</ul>';
-
-		return html;
-	}
 	/****************** Partie interraction *********************/
 
 
-	////gestion des différents liens
+	////gestion des différents liens de l'aplication
 	var liens = document.querySelectorAll('a');
 	for (var i = 0; i < liens.length; i++) {
 	 	liens[i].addEventListener("click",function(event){
@@ -254,31 +237,74 @@ GAME.gameStart = (function(){
 		},false);
 	}
 
+	/* fonctions */
+
+	var switchPage = function(newpage){
+		var courante = document.querySelector(pageCourante);
+		//courante.style.zIndex = 0;
+		courante.style.left = '-100%';
+		var nouvelle = document.querySelector(newpage);
+		//nouvelle.style.zIndex = 1;
+		nouvelle.style.left = '0';
+		pageCourante=newpage;
+	}
+
+
+	var donne2html = function(cartes,isJoueur){
+
+		var html='<ul>';
+
+		for (var i =0;i<cartes.length;i++) {
+
+			var htmlImg='<img src="images/'+cartes[i].img
+			+'" alt="'+i+'" style="width:100%;height:100%;'+
+			'transform:rotate('+cartes[i].orientation+'deg);'+
+			'-webkit-transform:rotate('+cartes[i].orientation+'deg);" />';
+
+			if(isJoueur){
+				htmlImg = '<a href="carte'+i+'" style="left:'
+					+(cartes[i].x-cartes[i].r)+'%;top:'+(cartes[i].y-cartes[i].r)
+					+'%;width:'+cartes[i].r*2+'%;height:'+cartes[i].r*2
+					+'%;" >'+htmlImg+'</a>';
+			}else{
+				htmlImg = '<div style="left:'+(cartes[i].x-cartes[i].r)
+					+'%;top:'+(cartes[i].y-cartes[i].r)
+					+'%;width:'+cartes[i].r*2+'%;height:'+cartes[i].r*2
+					+'%;" >'+htmlImg+'</div>';
+			}
+			html+='<li>'+htmlImg+'</li>';
+		};
+		html+='</ul>';
+
+		return html;
+	}
+
+	/* jouons avec les classes (sans JQuery)*/
+	var hasClass = function(elem,className) {
+		return new RegExp(' '+className+' ').test(' '+elem.className+' ');
+	}
+	var addClass = function (elem,className) {
+		if (!hasClass(elem,className)) {
+			elem.className+=' '+className;
+		}
+	}
+	var removeClass = function (elem, className) {
+		//on epure les classes de l'élément
+		var newClass=' '+elem.className.replace(/[\t\r\n]/g,' ')+' ';
+		if (hasClass(elem, className)) {
+			while (newClass.indexOf(' '+className+' ')>=0) {
+				newClass=newClass.replace(' '+className+' ',' ');
+			}
+			//mise à jour
+			elem.className=newClass.replace(/^\s+|\s+$/g,'');
+		}
+	}
+
+
 });
 
 
-/* jouons avec les classes (sans JQuery)*/
-function hasClass(elem,className) {
-	return new RegExp(' '+className+' ').test(' '+elem.className+' ');
-}
-function addClass(elem,className) {
-	if (!hasClass(elem,className)) {
-		elem.className+=' '+className;
-	}
-}
-function removeClass(elem, className) {
-	//on epure les classes de l'élément
-	var newClass=' '+elem.className.replace(/[\t\r\n]/g,' ')+' ';
-	if (hasClass(elem, className)) {
-		while (newClass.indexOf(' '+className+' ')>=0) {
-			newClass=newClass.replace(' '+className+' ',' ');
-		}
-		//mise à jour
-		elem.className=newClass.replace(/^\s+|\s+$/g,'');
-	}
-}
-
-
+/******************* Chargement *********************/
 if(window.addEventListener){
     window.addEventListener('load', GAME.gameStart, false);
 }else{
