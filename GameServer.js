@@ -167,7 +167,8 @@
 			// creerDonne qui teste partie.tas ?????
 			// TODO : le tas est créé a partir du jeu des jouaurs maintenenat
 			//partie.tas=creerDonne(0);
-			//parties.push(partie);
+			
+			parties.push(partie);
 
 			//on stocke l'ID de la partie créée
 			//client.partieId=parties.indexOf(partie);
@@ -186,8 +187,14 @@
 
 
 		client.on('listerParties', function(data) {
-			console.log("listage des parties");
-			client.emit("listeParties",{parties:parties});
+			console.log("listage des parties "+parties.length);
+			var p = [];
+			for (var i = 0; i < parties.length; i++) {
+				p.push({id:parties[i].id,nom:parties[i].nom,nbj:parties[i].joueurs.length});
+			}
+			console.log(p);
+
+			client.emit("listeParties",{parties:p});
 		});
 
 		client.on('rejoindrePartie', function(data) {
@@ -237,11 +244,17 @@
 			if(!partie){
 				client.emit("erreur",{message:"Partie non trouvée"});
 			}else{ 
+				if(partie.joueurs.length==1){
+					client.emit("erreur",{message:"Vous ne pouvez pas jouer tout seul !"});
+					return;
+				}
+
 				for(var i=0;i<partie.joueurs.length;i++){
 					var j = partie.joueurs[i];
 					console.log("teste si le joueur "+j+" est ready :"+joueurs[j-1].ready);
 					ready=ready&&joueurs[j-1].ready;
 				}
+
 				if(ready){
 					//distribution initiale pour les joueurs
 

@@ -24,10 +24,15 @@ GAME.gameStart = (function(){
 	//accusé de reception de la connexion au serveur
 	//TODO : surtout utile en cas de  reconnexion !!! 
 	sock.on("accuse",function(data){
+
+		//si id est déja défini, c'est une reconnexion, on recharge la page : 
+		if(id>0){
+			location.assign(location.href);
+			location.reload();
+		}
 		//console.log(data);
 		id=data.id;
 		//on ramene à l'accueil en faisant du ménage
-		document.getElementById("listeJoueurs").innerHTML="";
 		switchPage("#accueil");
 
 	});
@@ -40,26 +45,21 @@ GAME.gameStart = (function(){
 		}
 		console.log(data.partie);
 
-		switchPage("#jeu");
+		
 
 		//affichage des joueurs
 		for (var i = 0; i < data.joueurs.length; i++) {
 			var j = data.joueurs[i];
-
-
-			console.log("Affichage des joueurs : "+j.id+" / "+id);
-
-			var element=document.createElement("li");
-			element.innerHTML='<a class="joueur'+j.id+' attente" href="rien" ><span class="icon" ></span>'+j.pseudo+'</a>';
-			
-			document.getElementById("listeJoueurs").appendChild(element);
-
+			//console.log("Affichage des joueurs : "+j.id+" / "+id);
+			majListeJoueurs(j);
 		};
 
+		switchPage("#jeu");
+
 		//passage en mode attente
-		var e = document.querySelector("#jeu nav .ready .icon");
-		removeClass(e,'pret');
-		addClass(e,'attente');	//passage en mode attente
+		//var e = document.querySelector("#jeu nav .ready .icon");
+		//removeClass(e,'pret');
+		//addClass(e,'attente');
 
 	});
 
@@ -67,10 +67,7 @@ GAME.gameStart = (function(){
 	sock.on("joueur",function(data){
 		console.log(data.joueur);
 
-  		var element=document.createElement("li");
-  		element.innerHTML='<a class="joueur'+data.joueur.id+'" href="rien" ><span class="icon attente" ></span>'+data.joueur.pseudo+'</a>';
-		
-		document.getElementById("listeJoueurs").appendChild(element);
+		majListeJoueurs(data.joueur);
 
 	});
 
@@ -81,7 +78,7 @@ GAME.gameStart = (function(){
 		var options='';
 		for(var i=0;i<data.parties.length;i++){
 			options+='<option value="'+data.parties[i].id+'" >'+data.parties[i].nom+
-			'('+data.parties[i].joueurs.length+')</option>';
+			'('+data.parties[i].nbj+')</option>';
 		}
 		document.getElementById("liste_parties").innerHTML=options;
 
@@ -110,8 +107,12 @@ GAME.gameStart = (function(){
 		
 		//TODO nettoyage
 		//on ramene à l'accueil en faisant du ménage
-		document.getElementById("listeJoueurs").innerHTML="";
-		switchPage("#accueil");
+		//document.getElementById("listeJoueurs").innerHTML="";
+		//switchPage("#accueil");
+		//plus violent , on recharge l'application
+		location.assign(location.href);
+		location.reload();
+
 	});
 
 
@@ -172,6 +173,12 @@ GAME.gameStart = (function(){
 	});
 
 
+	sock.on("deconnexionJoueur",function(data){
+		console.log("Deconnexion du joueur"+data.joueur.id);		
+		//retirer le joueur de la partie
+
+
+	});
 
 	//debug
 	sock.on("debug",function(data){
@@ -237,7 +244,19 @@ GAME.gameStart = (function(){
 		},false);
 	}
 
-	/* fonctions */
+
+
+/* fonctions */
+
+
+
+	var majListeJoueurs = function(joueur){
+		var element=document.createElement("li");
+		element.id="joueur"+joueur.id;
+  		element.innerHTML='<a class="" href="rien" >'+joueur.pseudo+'<span class="icon attente" >0</span></a>';
+		document.getElementById("listeJoueurs").appendChild(element);
+	}
+	
 
 	var switchPage = function(newpage){
 		var courante = document.querySelector(pageCourante);

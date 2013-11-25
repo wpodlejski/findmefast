@@ -8,10 +8,16 @@ html{
  overflow:hidden;
  padding:0;
  margin:0;
+ font-size:1em;
 }
+
 *{
 -moz-box-sizing:border-box;
 box-sizing:border-box;
+}
+
+h1 {
+font-size:2em;
 }
 
 section {
@@ -22,7 +28,6 @@ section {
  bottom:0;
  left:-100%;
  right:0;
- text-align:center;
  min-height:100%;
  padding:10% 20%;
  margin:0;
@@ -38,7 +43,10 @@ section ul {
  padding-left:0;
  list-style-type:none;
 }
-section nav li a{
+nav ul {
+text-align:center;
+}
+nav a,form a{
  display:block;
  color:#000;
  text-decoration:none;
@@ -48,20 +56,18 @@ section nav li a{
  letter-spacing: normal;
  transition: all .5s ease-out;
 
-
 }
-section  li a:hover{
- letter-spacing: .8em;
- background-color:#fff;
+nav a:hover,form a:hover{
+	letter-spacing: .8em;
+	background-color:#fff;
 }
 
 
 /* menu créations */
 
 section label,section input ,section select{
-
-display:block;
-margin:auto;
+	display:block;
+	margin:auto;
 }
 
 
@@ -72,87 +78,67 @@ margin:auto;
 #jeu h2 {
 	display:none;
 }
-#jeu nav ul,
-#listeJoueurs {
+#jeu nav{
 	position:absolute;
 	z-index:3;
-
-
-}
-#jeu nav ul{
-	right:100%;
-	bottom:1em;
-	margin-right:-1em;
-	text-align:right;	
-}
-/* Liste des joueurs */
-#listeJoueurs{
-	left:100%;
+	left:0;
+	/*right:100%;*/
 	top:1em;
-	margin-left:-1em;
-	text-align:left;
+	/*margin-right:-2em;*/
+	/*text-align:right;	*/
+	
 }
+#jeu nav ul {text-align:left; }
 
-#jeu nav li a,
-#listeJoueurs li a{
-	border-radius:.5em;
-	padding:0 .5em 0 .5em;
+#jeu nav li a{
+	display:inline-block;
+	border-radius:0 1em 1em 0 ;
+	padding:0 0 0 .1em;
 	white-space: nowrap;
 	letter-spacing: normal;
-
- display:block;
- color:#000;
- text-decoration:none;
- padding:.1em;
- background-color:rgba(255,255,255,0);
- border-radius:2em;
- letter-spacing: normal;
- transition: all .5s ease-out;
-
+	font-size:.7em;
+	background:rgba(255,255,255,.5);
+	/*margin-left:-50%;*/
+	margin-left:-10px;
 }
 
-#jeu nav li a span,
-#listeJoueurs li a span{
-display:inline-block;
-width:2em;
-height:2em;
-background:white;
-vertical-align: middle;
-border-radius:50%;
+#jeu nav li a span{
+	display:inline-block;
+	width:2em;
+	height:2em;
+	background:white;
+	vertical-align: middle;
+	border-radius:50%;
+	margin-left:.3em;
+	text-align:center;
 }
-
-
-#jeu nav li a span{margin-left:.3em;}
-#listeJoueurs li a span{margin-right:.3em;}
-
 
 #jeu nav li a:hover{
- margin-right:-100%;
-}
-#listeJoueurs li a:hover{
- margin-left:-100%;
+	/*margin-left:-10px;*/
+	background:gray;
 }
 
 /* specificity war = pa bo */
-#jeu nav li a span.attente,
-#listeJoueurs li a span.attente{background:red;}
-#jeu nav li a span.pret,
-#listeJoueurs li a span.pret{background:green;}
+#jeu nav li a span.attente{background:red;}
+#jeu nav li a span.pret{background:green;}
 
 
+#listeJoueurs {
+	margin-top:2em;
+}
 
 .carte{
 	position:absolute;
 	z-index:2;
 	min-height:50%;
 	max-height:50%;
-	left:2em;
-	right:2em;
+	/*left:2em;
+	right:2em;*/
 	/*min-width:100%;*/
 	/*border:1px solid #000;*/
 }
-#newJeu {top:0;}
-#monJeu {bottom:0;}
+#newJeu {top:10px;right:10px;}
+#monJeu {bottom:10px;}
 
 .carte ul{
 	position:relative;
@@ -216,7 +202,7 @@ border-radius:50%;
 @media screen and (max-width:22em) {
 	section{
 		/*background-color: red;*/
-		padding:1%;
+		padding:10px;
 	}
 	li a:hover{
 	 letter-spacing: .2em;
