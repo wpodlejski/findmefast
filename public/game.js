@@ -26,16 +26,31 @@ GAME.gameStart = (function(){
 	sock.on("accuse",function(data){
 
 		//si id est déja défini, c'est une reconnexion, on recharge la page : 
-		if(id>0){
-			location.assign(location.href);
-			location.reload();
-		}
+		//if(id>0){
+		//	location.assign(location.href);
+		//	location.reload();
+		//}
 		//console.log(data);
 		id=data.id;
-		//on ramene à l'accueil en faisant du ménage
-		switchPage("#accueil");
+
+		//on amene à l'accueil en faisant du ménage éventuel 
+		reset();
+
 
 	});
+
+
+	//affichage des messages d'erreur
+	sock.on("erreur",function(data){
+
+		var erreurbox = document.getElementById("messages");
+
+		erreurbox.querySelector("p").innerHTML=data.message;
+
+		addClass(erreurbox,"front");
+
+	});
+
 
 	// message recu declenchant le passage en mode jeu
 	sock.on("jeu",function(data){
@@ -88,14 +103,17 @@ GAME.gameStart = (function(){
 
 	// message reçu lorsqu'un joueur en mode jeu est prêt
 	sock.on("pret",function(data){
+
 		console.log("Le joueur "+data.joueur.pseudo+" est prêt!");
 		
 		var e=document.querySelector("#listeJoueurs .joueur"+data.joueur.id+" .icon");
 
+
+		console.log(e);
+
+
 		removeClass(e,'attente');
 		addClass(e,'pret');
-		
-
 
 	});
 
@@ -109,9 +127,13 @@ GAME.gameStart = (function(){
 		//on ramene à l'accueil en faisant du ménage
 		//document.getElementById("listeJoueurs").innerHTML="";
 		//switchPage("#accueil");
-		//plus violent , on recharge l'application
+		
+		reset();
+
+		//plus violent , on recharge l'application ???? 
 		location.assign(location.href);
 		location.reload();
+
 
 	});
 
@@ -131,6 +153,14 @@ GAME.gameStart = (function(){
 			setTimeout(function(){removeClass(e,'gagnant');},100);
 		}
 
+		//met à jour les scores
+		for (var i = 0; i < data.joueurs.length; i++) {
+			var j = data.joueurs[i];
+			//var e=document.querySelector("#listeJoueurs .joueur"+j.id+" span");
+			//e.innerHTML=j.score;
+			console.log(j);
+		};
+
 
 		//chargement du tas
 		document.getElementById("newJeu").innerHTML=donne2html(data.tas,false);
@@ -145,7 +175,9 @@ GAME.gameStart = (function(){
 		for (var i = 0; i < liens.length; i++) {
 			//TODO : les listeners sont ils detruits lorsque le innerHTML est remplacé ?
 	 		liens[i].addEventListener("click",function(event){
+
 	 			event.preventDefault();
+
 	 			var target = event.currentTarget.attributes['href'].value || '#accueil';
 				console.log(target);
 				//TODO deplacer dans une fonction
@@ -182,11 +214,9 @@ GAME.gameStart = (function(){
 
 	//debug
 	sock.on("debug",function(data){
-		console.log("DEBUG");
+		console.log("-----DEBUG-----");
 		console.log(data);
 	});
-
-
 
 
 
@@ -197,12 +227,14 @@ GAME.gameStart = (function(){
 	var liens = document.querySelectorAll('a');
 	for (var i = 0; i < liens.length; i++) {
 	 	liens[i].addEventListener("click",function(event){
+
 	 		event.preventDefault();
+
 	 		var target = event.currentTarget.attributes['href'].value || '#accueil';
 			console.log(target)
 
 			if(target=="#accueil"){
-				switchPage(target);
+				reset();
 			}
 			if(target=="#nouvelle_partie"){
 				switchPage(target);
@@ -229,31 +261,57 @@ GAME.gameStart = (function(){
 				sock.emit("rejoindrePartie",{idPartie:idPartie,nomJoueur:nomJoueur});
 				//TODO : afficher un sablier
 			}
-			if(target=="#pret"){
+			if(target=="pret"){
 
-				var e=document.querySelector("#jeu nav .ready .icon");
-				removeClass(e,'attente');
-				addClass(e,'pret');	//passage en mode pret
 				sock.emit("pret",{});
 				//TODO : afficher un sablier
 			}
 			if(target=="debug"){
 				sock.emit("debug",{});
 			}
+			if(target=="reset"){
+				reset();
+				sock.emit("reset",{});
+			}
+			if(target=="quitterPartie"){
+				sock.emit("quitterPartie",{});
+				reset();
+			}
 
 		},false);
 	}
 
+	var erreurbox = document.getElementById("messages");
+
+	erreurbox.querySelector(".action a").addEventListener("click",function(event){
+
+	 		event.preventDefault();
+	 		removeClass(erreurbox,"front");
+
+
+	 });
+
+
 
 
 /* fonctions */
+	var reset = function(){
 
+		console.log("petit reset---");
+		//les listes de jeu : 
+		document.getElementById("liste_parties").innerHTML="";
+		document.getElementById("listeJoueurs").innerHTML="";
+		document.getElementById("monJeu").innerHTML="";
+		document.getElementById("newJeu").innerHTML="";
+
+		switchPage("#accueil");
+	}
 
 
 	var majListeJoueurs = function(joueur){
 		var element=document.createElement("li");
 		element.id="joueur"+joueur.id;
-  		element.innerHTML='<a class="" href="rien" >'+joueur.pseudo+'<span class="icon attente" >0</span></a>';
+  		element.innerHTML=joueur.pseudo+'<span class="icon attente" >0</span>';
 		document.getElementById("listeJoueurs").appendChild(element);
 	}
 	

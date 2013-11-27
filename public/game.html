@@ -69,18 +69,19 @@
 				<li><a href="#accueil">Accueil</a></li>
 			</ul>
 		</nav>
-		<article>
+		<nav>
 			<ul>
 				<li><a href="debug">debug</a></li>
+				<li><a href="reset">reset</a></li>
 			</ul>
-		</article>
+		</nav>
 	</section>
 	<section id="jeu">
 		<h2>Find me Fast</h2>
 		<nav>
 			<ul>
-				<li><a class="accueil" href="#accueil">Accueil<span class="icon"></span></a></li>
-				<li><a class="ready" href="#pret">Prêt<span class="icon"></span></a></li>
+				<li><a class="accueil" href="quitterPartie">Accueil<span class="icon"></span></a></li>
+				<li><a class="ready" href="pret">Prêt<span class="icon"></span></a></li>
 			</ul>
 			<ul id="listeJoueurs" ></ul>
 		</nav>
@@ -89,8 +90,13 @@
 			<div id="monJeu" class="carte" ></div>
 		</article>
 	</section>
-
-
+	<aside id="messages">
+		<div class="box">
+			<h4>Erreur</h4>
+			<p></p>
+			<div class="action" ><a href="close">Fermer</a></div>
+		</div>
+	</aside>
 </body>
 </html>
 

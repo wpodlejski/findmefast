@@ -90,19 +90,8 @@ section label,section input ,section select{
 }
 #jeu nav ul {text-align:left; }
 
-#jeu nav li a{
-	display:inline-block;
-	border-radius:0 1em 1em 0 ;
-	padding:0 0 0 .1em;
-	white-space: nowrap;
-	letter-spacing: normal;
-	font-size:.7em;
-	background:rgba(255,255,255,.5);
-	/*margin-left:-50%;*/
-	margin-left:-10px;
-}
 
-#jeu nav li a span{
+#jeu nav li span{
 	display:inline-block;
 	width:2em;
 	height:2em;
@@ -113,14 +102,14 @@ section label,section input ,section select{
 	text-align:center;
 }
 
-#jeu nav li a:hover{
+#jeu nav li:hover{
 	/*margin-left:-10px;*/
 	background:gray;
 }
 
 /* specificity war = pa bo */
-#jeu nav li a span.attente{background:red;}
-#jeu nav li a span.pret{background:green;}
+#jeu nav li span.attente{background:red;}
+#jeu nav li span.pret{background:green;}
 
 
 #listeJoueurs {
@@ -181,6 +170,38 @@ section label,section input ,section select{
 	border-radius:0 1em 0 0;
 	padding:.3em .5em .1em .1em;
 }
+
+
+#messages {
+ background:rgba(0,0,0,.5);
+ width:100%;
+ position:absolute;
+ z-index:1000;
+ top:0;
+ bottom:0;
+ left:0;
+ right:0;
+ min-height:100%;
+ transition:all .5s;
+ margin-top:100%;
+}
+
+
+#messages.front{
+	margin-top:0;
+
+}
+
+
+#messages .box{
+	width:20%;
+	min-width:20em;
+	margin:20% auto 0 auto;
+	border:1px solid red;
+	background:#eee;
+}
+
+
 
 /* Media Queries*/
 

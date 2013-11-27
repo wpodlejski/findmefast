@@ -162,7 +162,7 @@
 			};
 
 			console.log("On créé la partie "+partie.nom+" pour le joueur "
-				+joueurs[partie.joueurs[0]-1].pseudo+" dont l id est "+joueur.id);
+				+joueur.pseudo+" dont l id est "+joueur.id);
 
 			// creerDonne qui teste partie.tas ?????
 			// TODO : le tas est créé a partir du jeu des jouaurs maintenenat
@@ -232,6 +232,49 @@
 			}
 		
 		});
+
+
+
+		client.on('quitterPartie', function(data) {
+
+			//retirer le joueur de la partie
+			console.log("Liste des jouaurs de la partie que l'on veux quitter ("+id+")");
+			console.log(partie.joueurs);
+
+			for(var i=0;i<partie.joueurs.length;i++){
+
+				// j est l'identifiant du joueur, i la position dans la partie
+				var j = partie.joueurs[i]; 
+
+				if(j==id){
+					partie.joueurs.splice(i,1);
+					//on retire le joueur du groupe de diffuion
+					client.leave('partie'+partie.id);
+				}
+			}
+
+			console.log("On a enlevé le joueur "+id+" de la partie :");
+			console.log(partie.joueurs);
+			
+
+			if(partie.joueurs.length==0){
+				//on enleve la partie de la liste des parties
+				parties.splice(parties.indexOf(partie),1);
+				partie={};
+				console.log("Nombre de partie en mémoire :"+parties.length);
+
+			}else{
+				//on informe les joueurs que le jouer s'est barré de la partie
+				client.broadcast.to('partie'+partie.id).emit("joueurQuitte",{joueur:joueur});
+			}
+
+			//on accuse comme pour une reconnexion
+			client.emit("accuse",{message:"ok game",id:id});
+
+		});
+
+
+
 		
 		client.on('pret', function(data) {
 			joueur.ready=1;
@@ -349,9 +392,34 @@
 		});
 
 
-
 		client.on('debug', function() {
 			client.emit("debug",{joueur:joueur,partie:partie,joueurs:joueurs,parties:parties});
+		});
+
+
+		client.on('reset', function() {
+
+			console.log("*****************************************");
+			console.log("            TOTAL RESET  ");
+			console.log("*****************************************");
+
+
+			var partieId=partie.id;
+
+			//megamenage
+			joueurs=[];
+			clients=[];
+			parties=[];
+
+			joueur={};
+			partie={truc:999};// rustine de test
+
+			//il y a au moins le joueur ! !! pas cohérent avec le 'accuse'
+			joueurs[id-1]=joueur;
+			clients[id-1]=client;
+
+			client.broadcast.to('partie'+partieId).emit("accuse",{message:"ok game",id:id});
+
 		});
 
 
@@ -368,7 +436,7 @@
 					client.broadcast.to('partie'+partie.id).emit("fin",{partie:partie});
 					
 					//TODO //vider parties
-					parties.splice(array.indexOf(partie),1);
+					parties.splice(parties.indexOf(partie),1);
 					partie={};
 
 				}else{
@@ -385,12 +453,12 @@
 				console.log(joueurs);
 				console.log("Fin");
 
-				clients.splice(joueurs.indexOf(client),1);
+				clients.splice(clients.indexOf(client),1);
 				client={};
 
 
 			}catch(e){
-				console.log("Partie : ");
+				console.log("Interception d'exception dans la déconnexuion , Partie : ");
 				console.log(partie);
 				console.log(e);
 				//destruction de l'objet
@@ -405,9 +473,9 @@
 		});
 
 
-		/***************** Fonctions *************************/
+/***************** Fonctions *************************/
 		
-
+		// @return {id , pseudo , score}
 		var listeJoueurs = function(){
 		//créé la liste des joueurs et de leur pseudo
 			var listeJoueurs=[];
@@ -420,26 +488,9 @@
 			return listeJoueurs;
 		};
 
-/*
-		var donne_tour = function(vainqueur){
-			//créé le jeu pour chaque joueur soit c'est le vainqueur soit on touche à rien...
-
-			for(var i=0;i<partie.joueurs.length;i++){
-				var j=partie.joueurs[i];
-				//on récupère la donne actuelle du joueur
-				var donne=joueurs[j-1].donne;
-				if(vainqueur && vainqueur==j.id){
-					//seul le joueur gagnant a un nouveau jeu
-					donne=creerDonne();
-					joueurs[j-1].donne=donne;
-				}
-			}
-		};
-*/
 
 		//TODO : En fait c'est plus complexe que ca, car le nouveau tas doit tenir compte des jeux des
 		//autres  joueurs, seul le vainqueur prend le nouveau tas !!! 
-
 		//créé un jeu sans tenir compte du tas
 		//il est plus simple de générere le tas en fonction du jeu des joueurs
 		//retourne la donne
@@ -595,20 +646,6 @@
 
 		};
 
-
-
-		/*
-		var cherchePartie = function(id){
-			for (var i = 0; i < parties.length; i++) {
-
-				var p = parties[i];
-				console.log("Recherche de la parte "+p.id+"/"+id);
-
-				if(p.id==id)return p;
-			}
-			return null;
-		}
-		*/
 
 	});
 })();
