@@ -54,13 +54,17 @@ GAME.gameStart = (function(){
 
 	// message recu declenchant le passage en mode jeu
 	sock.on("jeu",function(data){
+
+
+		console.log(data.partie);
+
+
+
+
 		if(data.erreur){
 			alert("Erreur :"+data.erreur);
 			return;
 		}
-		console.log(data.partie);
-
-		
 
 		//affichage des joueurs
 		for (var i = 0; i < data.joueurs.length; i++) {
@@ -86,7 +90,7 @@ GAME.gameStart = (function(){
 
 	});
 
-	// message reçu pour lister les partie afin d'en rejoindre une
+	// message reçu pour lister les parties afin d'en rejoindre une
 	sock.on("listeParties",function(data){
 		console.log(data);
 
@@ -101,19 +105,20 @@ GAME.gameStart = (function(){
 	});
 
 
-	// message reçu lorsqu'un joueur en mode jeu est prêt
+	// message reçu lorsqu'un joueur en mode jeu est prêt (ou ne l'est plus)
 	sock.on("pret",function(data){
 
-		console.log("Le joueur "+data.joueur.pseudo+" est prêt!");
+		console.log("Le joueur "+data.joueur.pseudo+" est "+((data.pret)?"prêt!":"pas prêt"));
 		
-		var e=document.querySelector("#listeJoueurs .joueur"+data.joueur.id+" .icon");
-
+		var e=document.querySelector("#joueur"+data.joueur.id+" .icon");
 
 		console.log(e);
 
-
-		removeClass(e,'attente');
-		addClass(e,'pret');
+		if(data.pret){
+			addClass(e,'pret');
+		}else{
+			removeClass(e,'pret');
+		}
 
 	});
 
@@ -129,11 +134,6 @@ GAME.gameStart = (function(){
 		//switchPage("#accueil");
 		
 		reset();
-
-		//plus violent , on recharge l'application ???? 
-		location.assign(location.href);
-		location.reload();
-
 
 	});
 
@@ -156,9 +156,11 @@ GAME.gameStart = (function(){
 		//met à jour les scores
 		for (var i = 0; i < data.joueurs.length; i++) {
 			var j = data.joueurs[i];
-			//var e=document.querySelector("#listeJoueurs .joueur"+j.id+" span");
-			//e.innerHTML=j.score;
-			console.log(j);
+			console.log(j.id+" a maintenant "+j.score+" points");
+
+			var e=document.querySelector("#listeJoueurs .joueur"+j.id+" span");
+			e.innerHTML=j.score;
+			
 		};
 
 
@@ -212,11 +214,24 @@ GAME.gameStart = (function(){
 
 	});
 
+
 	//debug
 	sock.on("debug",function(data){
 		console.log("-----DEBUG-----");
 		console.log(data);
 	});
+
+
+
+	sock.on("reload",function(data){
+		console.log("-----RELOAD-----");
+
+		//plus violent , on recharge l'application ???? 
+		location.assign(location.href);
+		location.reload();
+
+	});
+
 
 
 
@@ -281,13 +296,13 @@ GAME.gameStart = (function(){
 		},false);
 	}
 
-	var erreurbox = document.getElementById("messages");
 
+	/* boite des messages d'erreur */
+	var erreurbox = document.getElementById("messages");
 	erreurbox.querySelector(".action a").addEventListener("click",function(event){
 
 	 		event.preventDefault();
 	 		removeClass(erreurbox,"front");
-
 
 	 });
 

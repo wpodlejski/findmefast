@@ -91,7 +91,12 @@ section label,section input ,section select{
 #jeu nav ul {text-align:left; }
 
 
-#jeu nav li span{
+#listeJoueurs {
+	margin-top:2em;
+}
+
+
+#listeJoueurs li span{
 	display:inline-block;
 	width:2em;
 	height:2em;
@@ -100,21 +105,14 @@ section label,section input ,section select{
 	border-radius:50%;
 	margin-left:.3em;
 	text-align:center;
-}
-
-#jeu nav li:hover{
-	/*margin-left:-10px;*/
-	background:gray;
+	background:red;
 }
 
 /* specificity war = pa bo */
-#jeu nav li span.attente{background:red;}
-#jeu nav li span.pret{background:green;}
+/*#jeu nav li span.attente{background:red;}*/
+#listeJoueurs li span.pret{background:green;}
 
 
-#listeJoueurs {
-	margin-top:2em;
-}
 
 .carte{
 	position:absolute;
