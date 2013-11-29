@@ -30,7 +30,7 @@ GAME.gameStart = (function(){
 		//	location.assign(location.href);
 		//	location.reload();
 		//}
-		//console.log(data);
+		console.log(data);
 		id=data.id;
 
 		//on amene à l'accueil en faisant du ménage éventuel 
@@ -58,13 +58,12 @@ GAME.gameStart = (function(){
 
 		console.log(data.partie);
 
-
-
-
+		/*
 		if(data.erreur){
 			alert("Erreur :"+data.erreur);
 			return;
 		}
+		*/
 
 		//affichage des joueurs
 		for (var i = 0; i < data.joueurs.length; i++) {
@@ -150,7 +149,7 @@ GAME.gameStart = (function(){
 
 			//removeClass(e,'perdant');
 			addClass(e,'gagnant');
-			setTimeout(function(){removeClass(e,'gagnant');},100);
+			setTimeout(function(){removeClass(e,'gagnant');},200);
 		}
 
 		//met à jour les scores
@@ -158,8 +157,11 @@ GAME.gameStart = (function(){
 			var j = data.joueurs[i];
 			console.log(j.id+" a maintenant "+j.score+" points");
 
-			var e=document.querySelector("#listeJoueurs .joueur"+j.id+" span");
-			e.innerHTML=j.score;
+			var e=document.querySelector("#joueur"+j.id+" span");
+			e.innerHTML=''+j.score;
+			//e.appendChild(document.createTextNode(""+j.score));
+			//e.innerHTML=j.score;
+			
 			
 		};
 
@@ -201,7 +203,7 @@ GAME.gameStart = (function(){
 
 		//removeClass(e,'vainqueur');
 		addClass(e,'perdant');
-		setTimeout(function(){removeClass(e,'perdant');},100);
+		setTimeout(function(){removeClass(e,'perdant');},200);
 
 
 	});

@@ -101,7 +101,9 @@
 		* TODO : Regarder les limites de cette fonction a +++ joueurs
 		*/
 
-		var id=Date.now();
+
+		//j'utilise le id du client
+		var id=client.id;
 		
 		joueur ={id:id,
 					master:0,
@@ -110,7 +112,13 @@
 					donne:0,
 					carte:0,
 					score:0};
-		client.id=id;
+
+
+		//!!!! impossible d'ajouter un attribut dirctement à client, ca plante
+		//le socket
+		//client.id=id;
+		//client.prototype.id=id;
+
 		
 		//trouver qu'elle est la meilleur manière de stocker plusieurs joueurs/clients
 		joueurs.push(joueur);
@@ -150,8 +158,9 @@
 		// les callback de emit sur le client mais ca compliquerais la compréhension
 		// p-ê  apres le POC ?
 
-		client.emit("accuse",{message:"ok game",id:id});
+		var a = client.emit("accuse",{message:"ok game",id:id});
 
+		//console.log(a);
 
 
 
@@ -358,9 +367,19 @@
 				}
 
 				if(ready){
+
+
+					//TODO : pourait être mutualisé avec la donne plus bas.
+					console.log("On envois à tout le monde le fait que je suis prêt");
+					client.emit("pret",{joueur:joueur,pret:1});
+					client.broadcast.to('partie'+partie.id).emit("pret",{joueur:joueur,pret:1});
+		
 					/***************************************/
 					//distribution initiale pour les joueurs
 					/***************************************/
+
+					//TODO : vérifier si l'intégration du client ne pose pas problème.
+
 					var listeDesJoueurs=[]; //pour économiser une double recherche des joueurs et des clients
 					for (var i = partie.joueurs.length - 1; i >= 0; i--) {
 						var j=partie.joueurs[i];
@@ -369,12 +388,18 @@
 						joujou.donne=creerDonne();
 						listeDesJoueurs.push({joueur:joujou,client:clicli});
 					}
+
+					//console.log(listeDesJoueurs);
+					//client.emit("debug",listeDesJoueurs);
+
 					//création du tas
 					partie.tas=creerTas();
 					//distribution des jeux
 					for (var i = listeDesJoueurs.length - 1; i >= 0; i--) {
 						var joujou = listeDesJoueurs[i].joueur;
 						var clicli = listeDesJoueurs[i].client;
+
+						//console.log(clicli.id);
 						clicli.emit("tour",{tas:partie.tas,cartes:joujou.donne,idVainqueur:0,joueurs:listeJoueurs()});
 					};
 
@@ -445,7 +470,7 @@
 						//on distribue aux autres joueurs
 						for (var i = partie.joueurs.length - 1; i >= 0; i--) {
 							var j=partie.joueurs[i];
-							if(j==idRapido)continue;
+							//if(j==idRapido)continue;
 							var autrejoujou=getJoueurById(j);
 							var clicli=getClientById(j);
 							clicli.emit("tour",{tas:partie.tas,cartes:autrejoujou.donne,idVainqueur:idRapido,joueurs:listeJoueurs()});
@@ -692,10 +717,16 @@
 				listeDesJoueurs.push(getJoueurById(partie.joueurs[i]));
 			}
 
-
+			console.log("-----------------------");
+			console.log("On va chercher les cartes du tas");
+			//trouve une carte pour chaque joueurs
 			for (var i=listeDesJoueurs.length-1;i>=0;i--) {
 				var joujou=listeDesJoueurs[i];
+				console.log("les cartes du joueur "+joujou.id);
+				console.log(joujou.donne);
+				
 				while(true){
+					//console.log("tirage carte pour "+joujou.id);
 					//une carte au hasard dans le jeu du joueur
 					var n=(Math.random()*8) | 0;		
 					var img=joujou.donne[n].img;
@@ -704,23 +735,30 @@
 					for (var j = jeu.length - 1; j >= 0; j--) {
 						if(jeu[j]==img){ok=false;break;}
 					}
-					//ni dans le jeu des autres joueurs déja servis (sinon doublons pour eux !)
-					for (var j=listeDesJoueurs.length-1;j>i;j--) {
+					console.log("la carte "+img+" n'est pasdéja pas dans le jeu");
+					//ni dans le jeu des autres joueurs(sinon doublons pour eux !)
+					for (var j=listeDesJoueurs.length-1;j>=0;j--) {
+						if(i==j)continue;//on evite de regarder dans son propre jeu
 						var iouiou=listeDesJoueurs[j];
-						for (var k=joujou.donne.length-1;k>=0;k--) {
-							if(joujou.donne[k].img==img){ok=false;break;}
+						for (var k=iouiou.donne.length-1;k>=0;k--) {
+							if(iouiou.donne[k].img==img){ok=false;break;}
 						}
+						console.log("la carte "+img+" n'est déja pas dans le jeu de "+iouiou.id);
 						if(!ok)break;
 					}
+
 					if(ok){
 						jeu.push(img);
 						//mise à jour de la carte gagnante du joueur
-						console.log("Carte commune du joueur "+jou.id+" : "+img);
-						jou.carte=img;
+						console.log("Carte commune du joueur "+joujou.id+" : "+img);
+						joujou.carte=img;
 						break;
 					}
+
+
+
 				}
-			};
+			}
 
 			//console.log("Avec les jeux des joueurs, la tas vaut pour l'instant :");
 			//console.log(jeu);
@@ -728,6 +766,9 @@
 			//on comble avec des cartes qui ne sont ni sur la carte, ni dans le jeu des joueurs
 
 			while(jeu.length<8){
+
+				//console.log("tirage carte pour combler");
+
 				var n = (Math.random()*images.length) | 0;
 				var img = images[n];
 				var ok=true;
@@ -739,8 +780,8 @@
 				//ni dans le jeu des autres joueurs déja servis (sinon doublons pour eux !)
 				for (var j=listeDesJoueurs.length-1;j>i;j--) {
 					var iouiou=listeDesJoueurs[j];
-					for (var k=joujou.donne.length-1;k>=0;k--) {
-						if(joujou.donne[k].img==img){ok=false;break;}
+					for (var k=iouiou.donne.length-1;k>=0;k--) {
+						if(iouiou.donne[k].img==img){ok=false;break;}
 					}
 					if(!ok)break;
 				}
