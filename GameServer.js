@@ -12,9 +12,6 @@
 	//limite le debug verbeux de socket.io
 	io.set('log level', 1);
 
-	//var width=800;
-	//var height=800;
-
 	//lancement du serveur HTTP
 	server.listen(1111);
 
@@ -38,139 +35,22 @@
 	var images=['penguin.svg','ninja.svg','boar.svg','extraterrestrial_alien.svg','elephant.svg','horse.svg','pill.svg','princess.svg','mens_symbol.svg','high_voltage_sign.svg','chicken.svg','poop.svg','rainbow_solid.svg','frog_face.svg','koala.svg','anchor.svg','wink.svg','dog_face.svg','bactrian_camel.svg','crescent_moon.svg','hot_beverage.svg','cyclone.svg','satisfied.svg','sun.svg','cactus.svg','spouting_whale.svg','snake_alt.svg','snail.svg','heart.svg'];
 	
 	//premier template
-	var templates=[]
+	var templates=[];
 	templates.push([[23,76,23],[55,89,11],[88,88,12],[70,51,29],[17,36,17],[10,10,9],[43,15,15],[87,12,12]]);
 
 
-
-	//console.log(images);
-
-	//pas très modulable tout ca... a refaire...
-	// prototyper l'objet client?
-	//réécriture à partir de 1 et non 0 , le 0 ne sert à rien donc
-	/*
-	var joueurs=[0,0,0,0,0];// TODO stocker les spectateurs
-	var ready=[0,0,0,0,0];
-	var pseudos=[0,0,0,0,0];
-	var scores=[0,0,0,0,0];
-
-
-
-	var master=0; // seul le master peut démmarer le jeu
-	var run=false;
-	*/
-
-
-	//le socket
-	//format des message json:
-	//acceptation on non du joueur
-	//  accuse {num,run,message}
-	//annonce d'un nouveau joueur ou d'un joueur en moins (num<0)
-	//  joueur {num,message}
-	//début du jeu
-	//	start {x,y,a,b}
-	//position de la raquette
-	//	raqpos {}
-	//position de la balle
-	//	balpos {}
-	//
-
 	//TODO nettoyer régulièrement joueurs et parties
-
-
 	//gestion du serveur de socket
 	//lors de la connexion d'un client
 	io.sockets.on('connection', function (client) {
 
 		
 		var joueur={};
-		var partie={truc:999};// rustine de test
-		
-
-		//nombre de joueur maxi ou partie commencée
-		/*
-	    if(nbjoueurs>8 || partie){
-			client.emit("accuse",{id:0,message:"jeux plein : mode spectateur"});
-			return;
-	    }
-
-		nbjoueurs+=1;
-		*/
-		//recherche de l'id le plus petit disponible 
-		/*
-		* TODO : Regarder les limites de cette fonction a +++ joueurs
-		*/
-
-
-		//j'utilise le id du client
+		var partie={};
 		var id=client.id;
-		
-		joueur ={id:id,
-					master:0,
-					pseudo:'',
-					ready:0,
-					donne:0,
-					carte:0,
-					score:0};
-
-
-		//!!!! impossible d'ajouter un attribut dirctement à client, ca plante
-		//le socket
-		//client.id=id;
-		//client.prototype.id=id;
-
-		
-		//trouver qu'elle est la meilleur manière de stocker plusieurs joueurs/clients
-		joueurs.push(joueur);
-		clients.push(client);
-
-
-
-		/*
-		var i=0;
-
-		while(i<=joueurs.length){
-			if(!joueurs[i]){
-				id=i+1;
-
-				joueur ={id:id,
-					master:0,
-					pseudo:'',
-					ready:0,
-					donne:0,
-					carte:0,
-					score:0};
-
-				joueurs[id-1]=joueur;
-				clients[id-1]=client;
-				break;
-			}
-			i++;
-		}
-		*/
-
 
 		console.log("Connexion d'un nouveau joueur id="+id);
 		
-
-		//accusé de reception de la connexion
-		//globalement on pourrait avantageusement utiliser 
-		// les callback de emit sur le client mais ca compliquerais la compréhension
-		// p-ê  apres le POC ?
-
-		var a = client.emit("accuse",{message:"ok game",id:id});
-
-		//console.log(a);
-
-
-
-
-
-
-
-
-
-
 
 		/************ partie asynchrone ****************/
 
@@ -178,11 +58,16 @@
 
 			//TODO conditions nécéssaires ???
 
+			if(partie && partie.id){
+				console.log("waw, la partie existe incroyable ! je la vire");
+				parties.splice(parties.indexOf(partie),1);
+			}
 			//le joueur devient master de sa partie
 			joueur.master=1;
 			joueur.pseudo=data.nomJoueur;
 			//ATTENTION la partie contient les id des joueurs!
 			//TODO garder un historique des tours???
+
 			// id = id de la partie
 			// nom = nom de la partie
 			// joueurs = liste des id des joueurs participants
@@ -198,7 +83,7 @@
 				tas:0,
 				reponses:[],
 				attenteReponse:0,
-			};
+			}
 			console.log("On créé la partie "+partie.nom+" pour le joueur "+joueur.pseudo+" dont l id est "+joueur.id);
 			// creerDonne qui teste partie.tas ?????
 			// TODO : le tas est créé a partir du jeu des jouaurs maintenenat
@@ -590,8 +475,46 @@
 		});
 
 
-/***************** Fonctions *************************/
+/***************** Fonctions ****************************************************************************/
 		
+
+		var initJoueur = function(){
+			joueur ={id:id,
+					master:0,
+					pseudo:'',
+					ready:0,
+					donne:0,
+					carte:0,
+					score:0};
+
+			//!!!! impossible d'ajouter un attribut dirctement à client, ca plante
+			//le socket
+			//client.id=id;
+			//client.prototype.id=id;
+			var ij = joueurs.indexOf(joueur);
+			if(ij==-1){
+				joueurs.push(joueur);
+			}else{
+				//inutile normalement
+				joueurs[ij]=joueur;
+			}
+			
+			var ic = clients.indexOf(client);
+			if(ic==-1){
+				clients.push(client);
+			}else{
+				//inutile normalement
+				clients[ic]=client;
+			}
+
+
+			//on informe le client et on donne les images en preload
+			client.emit("accuse",{message:"ok game",id:id,images:images});
+
+		};
+		//Execution de la fonction initJoueur();
+		initJoueur();
+
 		// @return {id , pseudo , score}
 		var listeJoueurs = function(){
 		//créé la liste des joueurs et de leur pseudo
@@ -821,5 +744,6 @@
 			}
 			return tas;
 		};
+
 	});
 })();

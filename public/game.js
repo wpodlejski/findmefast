@@ -25,17 +25,18 @@ GAME.gameStart = (function(){
 	//TODO : surtout utile en cas de  reconnexion !!! 
 	sock.on("accuse",function(data){
 
-		//si id est déja défini, c'est une reconnexion, on recharge la page : 
-		//if(id>0){
-		//	location.assign(location.href);
-		//	location.reload();
-		//}
 		console.log(data);
 		id=data.id;
-
-		//on amene à l'accueil en faisant du ménage éventuel 
 		reset();
 
+		//preload images
+		for (var i = data.images.length - 1; i >= 0; i--) {
+			var img = new Image();
+			img.onload=function(){
+				console.log("fin préchargement de l'images "+this.src);
+			};
+			img.src='images/'+data.images[i];
+		}
 
 	});
 
@@ -44,9 +45,7 @@ GAME.gameStart = (function(){
 	sock.on("erreur",function(data){
 
 		var erreurbox = document.getElementById("messages");
-
 		erreurbox.querySelector("p").innerHTML=data.message;
-
 		addClass(erreurbox,"front");
 
 	});
@@ -54,31 +53,15 @@ GAME.gameStart = (function(){
 
 	// message recu declenchant le passage en mode jeu
 	sock.on("jeu",function(data){
-
-
 		console.log(data.partie);
-
-		/*
-		if(data.erreur){
-			alert("Erreur :"+data.erreur);
-			return;
-		}
-		*/
-
 		//affichage des joueurs
 		for (var i = 0; i < data.joueurs.length; i++) {
 			var j = data.joueurs[i];
 			//console.log("Affichage des joueurs : "+j.id+" / "+id);
 			majListeJoueurs(j);
 		};
-
 		switchPage("#jeu");
-
-		//passage en mode attente
-		//var e = document.querySelector("#jeu nav .ready .icon");
-		//removeClass(e,'pret');
-		//addClass(e,'attente');
-
+		//TODO afficher attente
 	});
 
 	// info : un nouveau joueur se connecte dans notre partie
@@ -147,9 +130,11 @@ GAME.gameStart = (function(){
 			console.log("Bonne reponse");		
 			var e=document.getElementById("monJeu");
 
-			//removeClass(e,'perdant');
+			removeClass(e,'gagnant');
+			removeClass(e,'perdant');
 			addClass(e,'gagnant');
 			setTimeout(function(){removeClass(e,'gagnant');},200);
+
 		}
 
 		//met à jour les scores
@@ -197,13 +182,19 @@ GAME.gameStart = (function(){
 	 	}
 	});
 
+
+
+
+
 	sock.on("mauvaisereponse",function(data){
 		console.log("mauvaisereponse");		
 		var e=document.getElementById("monJeu");
-
 		//removeClass(e,'vainqueur');
 		addClass(e,'perdant');
 		setTimeout(function(){removeClass(e,'perdant');},200);
+
+		//TODO : interdire de jouer
+
 
 
 	});
