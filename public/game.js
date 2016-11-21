@@ -1,8 +1,5 @@
-/*$(function(){*/ // on zappe jquery
 
 var GAME=GAME||{};
-
-
 
 GAME.gameStart = (function(){
 
@@ -10,25 +7,17 @@ GAME.gameStart = (function(){
 	var pageCourante="#jeu";
 	var id=0;
 	var timer=0;
-	
 	// ETAPE 1 : la connexion
 	var sock=io.connect();
-
-
 	//TODO : précharger les svg pour éviter le FOUC
 	
-
-
 	/****************** Partie socket **************************/
-
 	//accusé de reception de la connexion au serveur
 	//TODO : surtout utile en cas de  reconnexion !!! 
 	sock.on("accuse",function(data){
-
 		console.log(data);
 		id=data.id;
 		reset();
-
 		//preload images
 		for (var i = data.images.length - 1; i >= 0; i--) {
 			var img = new Image();
@@ -37,18 +26,19 @@ GAME.gameStart = (function(){
 			};
 			img.src='images/'+data.images[i];
 		}
-
 	});
+
+
 
 
 	//affichage des messages d'erreur
 	sock.on("erreur",function(data){
-
 		var erreurbox = document.getElementById("messages");
 		erreurbox.querySelector("p").innerHTML=data.message;
 		addClass(erreurbox,"front");
-
 	});
+
+
 
 
 	// message recu declenchant le passage en mode jeu
@@ -64,123 +54,119 @@ GAME.gameStart = (function(){
 		//TODO afficher attente
 	});
 
+
+
+
 	// info : un nouveau joueur se connecte dans notre partie
 	sock.on("joueur",function(data){
 		console.log(data.joueur);
-
 		majListeJoueurs(data.joueur);
-
 	});
+
+
+
 
 	// message reçu pour lister les parties afin d'en rejoindre une
 	sock.on("listeParties",function(data){
 		console.log(data);
-
 		var options='';
 		for(var i=0;i<data.parties.length;i++){
 			options+='<option value="'+data.parties[i].id+'" >'+data.parties[i].nom+
 			'('+data.parties[i].nbj+')</option>';
 		}
 		document.getElementById("liste_parties").innerHTML=options;
-
 		switchPage("#lister_parties");
 	});
 
 
+
+
+
 	// message reçu lorsqu'un joueur en mode jeu est prêt (ou ne l'est plus)
 	sock.on("pret",function(data){
-
 		console.log("Le joueur "+data.joueur.pseudo+" est "+((data.pret)?"prêt!":"pas prêt"));
-		
 		var e=document.querySelector("#joueur"+data.joueur.id+" .icon");
-
 		console.log(e);
-
 		if(data.pret){
 			addClass(e,'pret');
 		}else{
 			removeClass(e,'pret');
 		}
-
 	});
+
+
+
+
 
 	// message reçu indiquant la fin de la partie (le chef de partie s'est deconnecté)
 	sock.on("fin",function(data){
 		console.log("fin de partie");
 		//alert(data);
 		console.log("Le joueur "+data.joueur.pseudo+" met fin à la partie...");
-		
 		//TODO nettoyage
 		//on ramene à l'accueil en faisant du ménage
 		//document.getElementById("listeJoueurs").innerHTML="";
 		//switchPage("#accueil");
-		
 		reset();
-
 	});
+
+
+
+
 
 
 	// on recoit un nouveau tour.
 	sock.on("tour",function(data){
 		console.log("On recoit un tour :");
 		console.log(data);
-
+		//traitement du premier tour (joueur forcément prêt)
+		if(data.joueur){
+			var e=document.querySelector("#joueur"+data.joueur.id+" .icon");
+			addClass(e,'pret');
+		}
 		//si je suis le vainqueur
 		if(data.idVainqueur==id){
 			console.log("Bonne reponse");		
 			var e=document.getElementById("monJeu");
-
-			removeClass(e,'gagnant');
-			removeClass(e,'perdant');
 			addClass(e,'gagnant');
-			setTimeout(function(){removeClass(e,'gagnant');},200);
-
+			setTimeout(function(){removeClass(e,'gagnant');},500);
+		}else{
+			var e=document.getElementById("monJeu");
+			removeClass(e,'gagnant')
 		}
-
 		//met à jour les scores
 		for (var i = 0; i < data.joueurs.length; i++) {
 			var j = data.joueurs[i];
 			console.log(j.id+" a maintenant "+j.score+" points");
-
 			var e=document.querySelector("#joueur"+j.id+" span");
 			e.innerHTML=''+j.score;
 			//e.appendChild(document.createTextNode(""+j.score));
 			//e.innerHTML=j.score;
-			
-			
 		};
-
-
 		//chargement du tas
 		document.getElementById("newJeu").innerHTML=donne2html(data.tas,false);
 		//chargement du jeu
 		document.getElementById("monJeu").innerHTML=donne2html(data.cartes,true);
-		
 		//initialisation du timer pour calculer le temps de réaction du joueur
 		timer=Date.now();
-
 		//création des liens pour les images
 		var liens = document.querySelectorAll('#jeu article a');
 		for (var i = 0; i < liens.length; i++) {
 			//TODO : les listeners sont ils detruits lorsque le innerHTML est remplacé ?
 	 		liens[i].addEventListener("click",function(event){
-
 	 			event.preventDefault();
-
 	 			var target = event.currentTarget.attributes['href'].value || '#accueil';
 				console.log(target);
 				//TODO deplacer dans une fonction
-
 				//calcul du temps de réaction
 				var rapid=Date.now()-timer;
 				var carte=target.substr(-1);
 				sock.emit("reponse",{carte:carte,rapid:rapid});
-
 				//TODO affiche wait
-
 			},false);
-	 	}
+		}
 	});
+
 
 
 
@@ -192,20 +178,29 @@ GAME.gameStart = (function(){
 		//removeClass(e,'vainqueur');
 		addClass(e,'perdant');
 		setTimeout(function(){removeClass(e,'perdant');},200);
-
 		//TODO : interdire de jouer
-
-
-
 	});
+
+
+
+
 
 
 	sock.on("deconnexionJoueur",function(data){
-		console.log("Deconnexion du joueur"+data.joueur.id);		
+		console.log("Deconnexion du joueur "+data.joueur.id);
+		var erreurbox = document.getElementById("messages");
+		erreurbox.querySelector("p").innerHTML="Deconnexion du joueur "+data.joueur.id;
+		addClass(erreurbox,"front");
 		//retirer le joueur de la partie
-
-
+		var e=document.querySelector("#joueur"+data.joueur.id);
+		e.parentNode.removeChild(e);
+		//addClass(e,'retire');
+		//TODO afficher message?
 	});
+
+
+
+
 
 
 	//debug
@@ -216,14 +211,17 @@ GAME.gameStart = (function(){
 
 
 
+
+
 	sock.on("reload",function(data){
 		console.log("-----RELOAD-----");
-
 		//plus violent , on recharge l'application ???? 
 		location.assign(location.href);
 		location.reload();
-
 	});
+
+
+
 
 
 
@@ -231,16 +229,16 @@ GAME.gameStart = (function(){
 	/****************** Partie interraction *********************/
 
 
+
+
+
 	////gestion des différents liens de l'aplication
 	var liens = document.querySelectorAll('a');
 	for (var i = 0; i < liens.length; i++) {
-	 	liens[i].addEventListener("click",function(event){
-
-	 		event.preventDefault();
-
-	 		var target = event.currentTarget.attributes['href'].value || '#accueil';
+		liens[i].addEventListener("click",function(event){
+			event.preventDefault();
+			var target = event.currentTarget.attributes['href'].value || '#accueil';
 			console.log(target)
-
 			if(target=="#accueil"){
 				reset();
 			}
@@ -248,7 +246,7 @@ GAME.gameStart = (function(){
 				switchPage(target);
 			}
 			if(target=="#lister_parties"){
-				//récuperer les parties
+				//récupérer les parties
 				sock.emit("listerParties",{});
 				//TODO : afficher un sablier
 			}
@@ -270,7 +268,6 @@ GAME.gameStart = (function(){
 				//TODO : afficher un sablier
 			}
 			if(target=="pret"){
-
 				sock.emit("pret",{});
 				//TODO : afficher un sablier
 			}
@@ -286,43 +283,56 @@ GAME.gameStart = (function(){
 				reset();
 			}
 
+
 		},false);
 	}
+
+
+
 
 
 	/* boite des messages d'erreur */
 	var erreurbox = document.getElementById("messages");
 	erreurbox.querySelector(".action a").addEventListener("click",function(event){
-
-	 		event.preventDefault();
-	 		removeClass(erreurbox,"front");
-
-	 });
+		event.preventDefault();
+		removeClass(erreurbox,"front");
+	});
 
 
 
 
-/* fonctions */
+
+
+/******************* fonctions *******************/
+
+
+
+
 	var reset = function(){
-
 		console.log("petit reset---");
 		//les listes de jeu : 
 		document.getElementById("liste_parties").innerHTML="";
 		document.getElementById("listeJoueurs").innerHTML="";
 		document.getElementById("monJeu").innerHTML="";
 		document.getElementById("newJeu").innerHTML="";
-
 		switchPage("#accueil");
+		if(!id){
+			sock.emit("quitterPartie",{});
+		}
 	}
+
 
 
 	var majListeJoueurs = function(joueur){
 		var element=document.createElement("li");
 		element.id="joueur"+joueur.id;
-  		element.innerHTML=joueur.pseudo+'<span class="icon attente" >0</span>';
+		attente=(joueur.ready)?"pret":"attente";
+		element.innerHTML=joueur.pseudo+'<span class="icon '+attente+'" >0</span>';
 		document.getElementById("listeJoueurs").appendChild(element);
 	}
-	
+
+
+
 
 	var switchPage = function(newpage){
 		var courante = document.querySelector(pageCourante);
@@ -335,17 +345,15 @@ GAME.gameStart = (function(){
 	}
 
 
+
+
 	var donne2html = function(cartes,isJoueur){
-
 		var html='<ul>';
-
 		for (var i =0;i<cartes.length;i++) {
-
 			var htmlImg='<img src="images/'+cartes[i].img
 			+'" alt="'+i+'" style="width:100%;height:100%;'+
 			'transform:rotate('+cartes[i].orientation+'deg);'+
 			'-webkit-transform:rotate('+cartes[i].orientation+'deg);" />';
-
 			if(isJoueur){
 				htmlImg = '<a href="carte'+i+'" style="left:'
 					+(cartes[i].x-cartes[i].r)+'%;top:'+(cartes[i].y-cartes[i].r)
@@ -360,9 +368,11 @@ GAME.gameStart = (function(){
 			html+='<li>'+htmlImg+'</li>';
 		};
 		html+='</ul>';
-
 		return html;
 	}
+
+
+
 
 	/* jouons avec les classes (sans JQuery)*/
 	var hasClass = function(elem,className) {
@@ -386,13 +396,14 @@ GAME.gameStart = (function(){
 	}
 
 
+
+
 });
 
 
 /******************* Chargement *********************/
 if(window.addEventListener){
-    window.addEventListener('load', GAME.gameStart, false);
+	window.addEventListener('load', GAME.gameStart, false);
 }else{
-    window.attachEvent('onload', GAME.gameStart);
+	window.attachEvent('onload', GAME.gameStart);
 }
-

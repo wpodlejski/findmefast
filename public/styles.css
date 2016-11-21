@@ -96,6 +96,7 @@ section label,section input ,section select{
 }
 
 
+
 #listeJoueurs li span{
 	display:inline-block;
 	width:2em;
@@ -108,10 +109,17 @@ section label,section input ,section select{
 	background:red;
 }
 
+#listeJoueurs li.retire{
+text-decoration: line-through;
+}
+
 /* specificity war = pa bo */
 /*#jeu nav li span.attente{background:red;}*/
 #listeJoueurs li span.pret{background:green;}
 
+#listeJoueurs li.retire span{
+background:red;
+}
 
 
 .carte{

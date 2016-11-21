@@ -10,10 +10,10 @@
 	var io=require('socket.io').listen(server);
 
 	//limite le debug verbeux de socket.io
-	io.set('log level', 1);
+	//io.set('log level', 1);
 
 	//lancement du serveur HTTP
-	server.listen(1111);
+	server.listen(3000);
 
 	//Renvoi les fichiers statiques
 	//la racine puis le reste
@@ -81,12 +81,11 @@
 				nom:data.nomPartie,
 				joueurs:[id],
 				tas:0,
-				reponses:[],
-				attenteReponse:0,
+				reponse:0,
 			}
-			console.log("On créé la partie "+partie.nom+" pour le joueur "+joueur.pseudo+" dont l id est "+joueur.id);
+			console.log("On créé la partie "+partie.nom+" pour le joueur "+joueur.pseudo+" dont l'id est "+joueur.id);
 			// creerDonne qui teste partie.tas ?????
-			// TODO : le tas est créé a partir du jeu des jouaurs maintenenat
+			// TODO : le tas est créé a partir du jeu des joueurs 
 			//partie.tas=creerDonne(0);
 			parties.push(partie);
 			//on stocke l'ID de la partie créée
@@ -106,7 +105,7 @@
 
 
 		client.on('listerParties', function(data) {
-			console.log("listage des parties "+parties.length);
+			console.log("listage des parties :"+parties.length);
 			var p = [];
 			for (var i = parties.length - 1; i >= 0; i--) {
 				//teste si la partie est débutée
@@ -114,7 +113,7 @@
 					p.push({id:parties[i].id,nom:parties[i].nom,nbj:parties[i].joueurs.length});
 				}
 			}
-			console.log(p);
+			//console.log(p);
 			client.emit("listeParties",{parties:p});
 		});
 
@@ -127,11 +126,9 @@
 
 
 		client.on('rejoindrePartie', function(data) {
-
 			partie=getPartieById(data.idPartie);
 			joueur.pseudo=data.nomJoueur;
-			
-			if(!partie){
+			if(!data.idPartie || !partie){
 				client.emit("erreur",{message:"Partie non trouvée"});
 			}else if(partie.tas!=0){
 				client.emit("erreur",{message:"Partie déja débutée"});
@@ -143,22 +140,17 @@
 				//TODO : tester les place restantes dans la partie
 				//TODO : tester si le master est ready
 				//TODO : un joueur ne peut pas être 2 fois dans la partie
-				//TODO : un joueur ne peux pas jouer 2 parties en me temps
-
+				//TODO : un joueur ne peux pas jouer 2 parties en meme temps
 				//ajoute le joueur à la partie
 				partie.joueurs.push(joueur.id);
-
 				//NORMALEMENT (j'ai vérifié!) les objets sont bien pushé et extrait par reférence dans les tableaux !
 				//mise à jour de la copie locale????
 				//partie=parties[data.idPartie];
-
 				//on s'abonne au groupe correspondant à la partie
 				client.join('partie'+partie.id);
 				client.emit("jeu",{partie:partie,joueurs:listeJoueurs()});
 				//broadcast d'ajout de joueur // sauf pour moi!
 				client.broadcast.to('partie'+partie.id).emit("joueur",{joueur:joueur});
-
-				
 				console.log("le joueur "+joueur.pseudo+" rejoint la partie n°"+data.idPartie);
 			}
 		});
@@ -172,24 +164,20 @@
 
 
 		client.on('quitterPartie', function(data) {
-
 			//retirer le joueur de la partie
 			console.log("Liste des joueurs de la partie que l'on veux quitter ("+id+")");
 			console.log(partie.joueurs);
-
 			for(var i=0;i<partie.joueurs.length;i++){
-				// j est l'identifiant du joueur, i la position dans la partie
-				var j = partie.joueurs[i]; 
-				if(j==id){
+				// jid est l'identifiant du joueur, i la position dans la partie
+				var jid = partie.joueurs[i]; 
+				if(jid==id){
 					partie.joueurs.splice(i,1);
 					//on retire le joueur du groupe de diffuion
 					client.leave('partie'+partie.id);
 				}
 			}
-
 			console.log("On a enlevé le joueur "+id+" de la partie :");
 			console.log(partie.joueurs);
-			
 			if(partie.joueurs.length==0){
 				//on enleve la partie de la liste des parties
 				parties.splice(parties.indexOf(partie),1);
@@ -198,8 +186,9 @@
 			}else{
 				//on informe les joueurs que le joueur s'est barré de la partie
 				//et on supprime la partie locale
-				partie={};
-				client.broadcast.to('partie'+partie.id).emit("joueurQuitte",{joueur:joueur});
+				//partie={};
+				client.broadcast.to('partie'+partie.id).emit("deconnexionJoueur",{joueur:joueur});
+
 			}
 			//on accuse comme pour une reconnexion ( voir on fait un reload)
 			client.emit("accuse",{message:"ok game",id:id});
@@ -207,7 +196,7 @@
 
 
 
-		
+
 
 
 
@@ -223,13 +212,11 @@
 				client.broadcast.to('partie'+partie.id).emit("pret",{joueur:joueur,pret:0});
 				return;
 			}else{
-				//normalement impossible une fouis le bouton prêt enlevé
+				//normalement impossible une fois le bouton 'prêt' enlevé
 				//mais on ne sais jamais
 				client.emit("erreur",{message:"impossible de quitter une partie débutée."});
 				return;
 			}
-			
-
 			//si tous les joueurs sont ready on démarre
 			var ready=true;
 			if(!partie){
@@ -242,29 +229,23 @@
 					client.emit("pret",{joueur:joueur,pret:1});
 					return;
 				}
-
+				var ready=true;
 				for(var i=0;i<partie.joueurs.length;i++){
 					var j = partie.joueurs[i];
-
 					var joujou=getJoueurById(j);
 					console.log("teste si le joueur "+j+" est ready :"+joujou.ready);
 					ready=ready&&joujou.ready;
 				}
-
 				if(ready){
-
-
-					//TODO : pourait être mutualisé avec la donne plus bas.
-					console.log("On envois à tout le monde le fait que je suis prêt");
-					client.emit("pret",{joueur:joueur,pret:1});
-					client.broadcast.to('partie'+partie.id).emit("pret",{joueur:joueur,pret:1});
-		
+					//TODO : DOIT! être mutualisé avec la donne plus bas.
+					// Sinon risque de recevoir la donne AVANT d'être prêt!!
+					//console.log("On envois à tout le monde (dont moi) le fait que je suis prêt");
+					//client.emit("pret",{joueur:joueur,pret:1});
+					//client.broadcast.to('partie'+partie.id).emit("pret",{joueur:joueur,pret:1});
 					/***************************************/
 					//distribution initiale pour les joueurs
 					/***************************************/
-
 					//TODO : vérifier si l'intégration du client ne pose pas problème.
-
 					var listeDesJoueurs=[]; //pour économiser une double recherche des joueurs et des clients
 					for (var i = partie.joueurs.length - 1; i >= 0; i--) {
 						var j=partie.joueurs[i];
@@ -273,26 +254,18 @@
 						joujou.donne=creerDonne();
 						listeDesJoueurs.push({joueur:joujou,client:clicli});
 					}
-
-					//console.log(listeDesJoueurs);
-					//client.emit("debug",listeDesJoueurs);
-
 					//création du tas
 					partie.tas=creerTas();
 					//distribution des jeux
 					for (var i = listeDesJoueurs.length - 1; i >= 0; i--) {
 						var joujou = listeDesJoueurs[i].joueur;
 						var clicli = listeDesJoueurs[i].client;
-
-						//console.log(clicli.id);
-						clicli.emit("tour",{tas:partie.tas,cartes:joujou.donne,idVainqueur:0,joueurs:listeJoueurs()});
+						//On ajoute le joueur pret, cas géré du du premier tour
+						clicli.emit("tour",{joueur:joueur,tas:partie.tas,cartes:joujou.donne,idVainqueur:0,joueurs:listeJoueurs()});
 					};
-
 					//C'est parti!!!!!!
 				}else{
 					//on anonce que le joueur est pret
-					//Attention, le broadcast ne concerne pas moi même !! 
-
 					console.log("On envois à tout le monde le fait que je suis prêt");
 					client.emit("pret",{joueur:joueur,pret:1});
 					client.broadcast.to('partie'+partie.id).emit("pret",{joueur:joueur,pret:1});
@@ -306,66 +279,46 @@
 
 
 
-
-
-
-
 		client.on('reponse', function(data) {
-
 			console.log("le joueur "+joueur.pseudo+" trouve la carte "+joueur.donne[data.carte].img+" en "+data.rapid+"ms");
 			console.log("Sa carte commune était "+joueur.carte);
-			
 			//traitement du jeu
 			if(joueur.donne[data.carte].img==joueur.carte){
-				//on ajoute sa réponse
-				//TODO : bug en prévision si on ajoute sa réponse pendant
-				//  l'execution du setTimeout attenteReponse!!!!!!
-				// prévoir un lock
-				partie.reponses.push({id:joueur.id,rapid:data.rapid});
-				// si on est le premier à répondre OK
-				// Attente de 0.5s pour les ex-aequo
-				if(partie.attenteReponse==0){
-					partie.attenteReponse=setTimeout(function(){
-						//teste le joueur le plus rapide
-						var idRapido=0;
-						var virRapido=999999999;
-						for (var i = 0; i < partie.reponses.length; i++) {
-							var v = partie.reponses[i].rapid;
-							if(v<virRapido){
-								virRapido=v;
-								idRapido=partie.reponses[i].id;
-							}
-						};
-						var joujou = getJoueurById(idRapido);
+				//on ajoute sa réponse si c'est la plus rapide
+				if(partie.reponse){
+					//compare le temps de réponse
+					if(data.rapid<partie.reponse.rapid){
+						partie.reponse={id:joueur.id,rapid:data.rapid};
+					}
+				}else{
+					partie.reponse={id:joueur.id,rapid:data.rapid};
+				}
+				//On attend 0.5s avant d'envoyer le résultat au vainqueur!
+				//pas forcément le joueur courant donc, vérifier si la réponse n'a pas déja été envoyé!
+				setTimeout(function(){
+					if(partie.reponse){
+						var joujou = getJoueurById(partie.reponse.id);
 						console.log("Le joueur le plus rapide est "+joujou.pseudo);
-						//RAZ des réponses
-						partie.reponses=[];
-						partie.attenteReponse=0;// TODO faut il un clearTimeout???
+						//RAZ de la meilleure réponses
+						partie.reponse=0;
 						//on augmente le score
 						joujou.score++;
 						//nouveau jeu pour le joueur
 						//normalement il prends le tas comme nouveau jeu
 						joujou.donne=partie.tas;
 						//console.log("nouveau jeu du joueur avant le nouveau tas");
-						//console.log(joueurs[idRapido-1].donne);
 						//nouveau tas
 						partie.tas=creerTas();
 						//console.log("nouveau jeu du joueur APRES le nouveau tas");
-						//console.log(joueurs[idRapido-1].donne);
-						//on distribue aux autres joueurs
+						//on distribue aux joueurs
 						for (var i = partie.joueurs.length - 1; i >= 0; i--) {
 							var j=partie.joueurs[i];
-							//if(j==idRapido)continue;
 							var autrejoujou=getJoueurById(j);
 							var clicli=getClientById(j);
-							clicli.emit("tour",{tas:partie.tas,cartes:autrejoujou.donne,idVainqueur:idRapido,joueurs:listeJoueurs()});
+							clicli.emit("tour",{tas:partie.tas,cartes:autrejoujou.donne,idVainqueur:joujou.id,joueurs:listeJoueurs()});
 						}
-					},500);
-				}else{
-					//on a trouvé la réponse mais on était pas le premier
-					// on attends donc les .5s pour comparer
-					//client.emit("reponse",{reponse:"attente"});
-				}
+					}
+				},500);
 			}else{
 				//trompé
 				client.emit("mauvaisereponse",{});
@@ -382,8 +335,6 @@
 		client.on('debug', function() {
 			client.emit("debug",{joueur:joueur,partie:partie,joueurs:joueurs,parties:parties});
 		});
-
-
 
 
 
@@ -436,6 +387,10 @@
 				if(partie && partie.joueurs && partie.joueurs.length>0 && partie.joueurs[0]==id){
 
 					client.broadcast.to('partie'+partie.id).emit("fin",{partie:partie});
+
+					//desaboner les joueurs au groupe de diffusion
+
+					
 					
 					//TODO //vider parties
 					parties.splice(parties.indexOf(partie),1);
@@ -457,6 +412,7 @@
 
 				clients.splice(clients.indexOf(client),1);
 				client={};
+
 				//TODO, il faut bien voir le comportement en cas de reconnexion ici !!!!!
 
 			}catch(e){
@@ -524,7 +480,7 @@
 				var joujou = getJoueurById(jid);
 
 				//console.log("j'ajoute le joueur "+jid+" à la liste des joueurs");
-				listeDesJoueurs.push({id:joujou.id,pseudo:joujou.pseudo,score:joujou.score});
+				listeDesJoueurs.push({id:joujou.id,pseudo:joujou.pseudo,score:joujou.score,ready:joujou.ready});
 			}
 
 			return listeDesJoueurs;
