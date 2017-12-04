@@ -5,7 +5,7 @@
   "author": "cedricici <cedric.esnault@cedricici.eu>",
   "main": "server.js",
   "scripts": {
-    "start": "forever server.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "forever": "",

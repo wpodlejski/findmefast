@@ -13,7 +13,8 @@
 	//io.set('log level', 1);
 
 	//lancement du serveur HTTP
-	server.listen(3000);
+	var port = (process.env.PORT)?process.env.PORT:3000;
+	server.listen(port);
 
 	//Renvoi les fichiers statiques
 	//la racine puis le reste
