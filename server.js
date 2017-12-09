@@ -2,63 +2,83 @@
 //# 2013-10-11
 //# Cedricici
 (function(){
-	//les dépendances
+
+
+	/**
+	* les dépendances
+	*/
 
 	var express = require('express');
 	var app = express();
 	var server = require('http').createServer(app);
 	var io=require('socket.io').listen(server);
 
+	
+
 	//limite le debug verbeux de socket.io
 	//io.set('log level', 1);
 
-	//lancement du serveur HTTP
-	var port = (process.env.PORT)?process.env.PORT:3000;
+	/**
+	* Initialisation du server HTTP
+	*/
+	var port = (process.env.PORT)?process.env.PORT:1111;
 	server.listen(port);
 
-	//Renvoi les fichiers statiques
-	//la racine puis le reste
+	/**
+	* Traitement des fichiers statiques
+	*
+	*/
 	app.get('/',function(req,res){
-	  res.sendfile(__dirname + '/public/game.html');
+	  res.sendFile(__dirname + '/public/game.html');
 	});
 	app.use(express.static(__dirname + '/public'));
 
 
-
 	/********** GESTION DU JEU *************/
 
+
+	/** 
+	* Déclaration des variables de jeu et des constantes
+	*/ 
 	var joueurs=[];
 	var clients=[];
 	var parties=[];
-	
-	//les images
 	var cheminImage='/images/';
 	var images=['penguin.svg','ninja.svg','boar.svg','extraterrestrial_alien.svg','elephant.svg','horse.svg','pill.svg','princess.svg','mens_symbol.svg','high_voltage_sign.svg','chicken.svg','poop.svg','rainbow_solid.svg','frog_face.svg','koala.svg','anchor.svg','wink.svg','dog_face.svg','bactrian_camel.svg','crescent_moon.svg','hot_beverage.svg','cyclone.svg','satisfied.svg','sun.svg','cactus.svg','spouting_whale.svg','snake_alt.svg','snail.svg','heart.svg'];
-	
-	//premier template
 	var templates=[];
+	
+	// template par defaut d'une carte : 8*[x,y,rayon]
+	// TODO : définir d'autres templates
 	templates.push([[23,76,23],[55,89,11],[88,88,12],[70,51,29],[17,36,17],[10,10,9],[43,15,15],[87,12,12]]);
 
 
-	//TODO nettoyer régulièrement joueurs et parties
-	//gestion du serveur de socket
-	//lors de la connexion d'un client
+	/**
+	* Connexion d'un client socket.io
+	*
+	*/
 	io.sockets.on('connection', function (client) {
 
-		
+		/**
+		*  initialisation des variable d'un joueur
+		*/
 		var joueur={};
 		var partie={};
 		var id=client.id;
 
 		console.log("Connexion d'un nouveau joueur id="+id);
 		
+		initJoueur();
+
 
 		/************ partie asynchrone ****************/
 
+		/**
+		* Création d'une partie
+		*/
 		client.on('creerPartie', function(data) {
 
-			//TODO conditions nécéssaires ???
 
+			//TODO: Ajout des conditions nécéssaires ???
 			if(partie && partie.id){
 				console.log("waw, la partie existe incroyable ! je la vire");
 				parties.splice(parties.indexOf(partie),1);
@@ -99,12 +119,9 @@
 			client.emit("jeu",{partie:partie,joueurs:listeJoueurs()});
 		});
 
-
-
-
-
-
-
+		/**
+		* envoie la liste des parties dispo au client
+		*/
 		client.on('listerParties', function(data) {
 			console.log("listage des parties :"+parties.length);
 			var p = [];
@@ -118,14 +135,11 @@
 			client.emit("listeParties",{parties:p});
 		});
 
-
-
-
-
-
-
-
-
+		/**
+		* rejoint une partie
+		* renvoie un message d'erreur ou un broadcast de réussite à tous les joueurs
+		*
+		*/
 		client.on('rejoindrePartie', function(data) {
 			partie=getPartieById(data.idPartie);
 			joueur.pseudo=data.nomJoueur;
@@ -157,13 +171,10 @@
 		});
 
 
-
-
-
-
-
-
-
+		/**
+		* quitte la partie
+		* broadcast de l'info à tous les joueurs
+		*/
 		client.on('quitterPartie', function(data) {
 			//retirer le joueur de la partie
 			console.log("Liste des joueurs de la partie que l'on veux quitter ("+id+")");
@@ -195,12 +206,12 @@
 			client.emit("accuse",{message:"ok game",id:id});
 		});
 
-
-
-
-
-
-
+		/**
+		* indique que le joueur est prêt
+		*  plusieurs actions en fonctions de l'état des différent joueurs dont
+		*  le lancement du jeu
+		* 
+		*/
 		client.on('pret', function(data) {
 			//pret est une bascule
 			//si le joueur n'est pas pret, il le devient
@@ -274,12 +285,13 @@
 			}
 		});
 
-
-
-
-
-
-
+		/**
+		* un joueur donne une réponse
+		*  test le temps de réaction pour savoir si le joueur a été le plus rapide
+		*  on attend 500ms et on valide la réponse du meilleur joueur (sois lui-même soit un autre)
+		*  Le test (partie.reponse) permet d'éviter que l'autre joueur valide également sa bonne réponse
+		* 
+		*/
 		client.on('reponse', function(data) {
 			console.log("le joueur "+joueur.pseudo+" trouve la carte "+joueur.donne[data.carte].img+" en "+data.rapid+"ms");
 			console.log("Sa carte commune était "+joueur.carte);
@@ -327,23 +339,19 @@
 		});
 
 
-
-
-
-
-
-
+		/**
+		* debug des variables de jeu
+		* envoie au joueur
+		*/
 		client.on('debug', function() {
 			client.emit("debug",{joueur:joueur,partie:partie,joueurs:joueurs,parties:parties});
 		});
 
 
-
-
-
-
-
-
+		/**
+		* debug : reset du jeu
+		* broadcast à tous les joueurs
+		*/
 		client.on('reset', function() {
 
 			console.log("*****************************************");
@@ -370,13 +378,10 @@
 		});
 
 
-
-
-
-
-
-
-
+		/**
+		* deconnexion d'un joueur
+		*  Il faut traiter le cas du créateur de la partie
+		*/
 		client.on('disconnect', function() {
 			console.log("deconnexion du joueur "+id);
 
@@ -424,7 +429,6 @@
 				for (prop in this){prop=null;}
 			}
 
-
 			//console.log(parties);
 			//console.log(joueurs);
 			//client.broadcast.emit("joueur",{num:-id,message:""});
@@ -435,7 +439,11 @@
 /***************** Fonctions ****************************************************************************/
 		
 
-		var initJoueur = function(){
+		/**
+		* Initialisation d'un joueur
+		* 
+		*/
+		function initJoueur(){
 			joueur ={id:id,
 					master:0,
 					pseudo:'',
@@ -469,11 +477,12 @@
 			client.emit("accuse",{message:"ok game",id:id,images:images});
 
 		};
-		//Execution de la fonction initJoueur();
-		initJoueur();
 
-		// @return {id , pseudo , score}
-		var listeJoueurs = function(){
+		/**
+		* création de la liste des joueurs
+		* @return {id , pseudo , score}
+		*/
+		function listeJoueurs(){
 		//créé la liste des joueurs et de leur pseudo
 			var listeDesJoueurs=[];
 			for (var i=0;i<partie.joueurs.length;i++) {
@@ -487,12 +496,12 @@
 			return listeDesJoueurs;
 		};
 
-		//TODO mutualisé les 2 méthodes 
-		//Je ne sais plus pourquoi mais il n'est pas facile d'avoir 
-		//joueur attr de client ou l'inverse!
-
-		//recherche un joueur par son ID
-		var getJoueurById = function(jid){
+		/**
+		* récupération d'un joueur par son Id
+		* 
+		* @return joueur
+		*/
+		function getJoueurById(jid){
 			for (var i = joueurs.length - 1; i >= 0; i--) {
 				var joujou =joueurs[i];
 				if(joujou.id==jid){
@@ -501,8 +510,12 @@
 			}
 			return null;
 		}
-		//recherche un client par son ID
-		var getClientById = function(cid){
+		/**
+		* récupération d'un client par son Id
+		* 
+		* @return client
+		*/
+		function getClientById(cid){
 			for (var i = clients.length - 1; i >= 0; i--) {
 				var clicli =clients[i];
 				if(clicli.id==cid){
@@ -511,9 +524,12 @@
 			}
 			return null;
 		}
-
-		//recherche une partie par son ID
-		var getPartieById = function(pid){
+		/**
+		* récupération d'une partie par son Id
+		* 
+		* @return partie
+		*/
+		function getPartieById(pid){
 			for (var i = parties.length - 1; i >= 0; i--) {
 				var parpar =parties[i];
 				if(parpar.id==pid){
@@ -522,17 +538,13 @@
 			}
 			return null;
 		}
-
-
-
-
-
-		//TODO : En fait c'est plus complexe que ca, car le nouveau tas doit tenir compte des jeux des
-		//autres  joueurs, seul le vainqueur prend le nouveau tas !!! 
-		//créé un jeu sans tenir compte du tas
-		//il est plus simple de générere le tas en fonction du jeu des joueurs
-		//retourne la donne
-		var creerDonne = function(){
+		/**
+		* création d'une main pour un joueur
+		*   la nouvelle main doit tenir compte des jeux des autres joueurs, seul le vainqueur prend le nouveau tas !!! 
+		*   il faut donc générer la carte et le tas en fonction du jeu des joueurs
+		* @return nouvelle carte
+		*/
+		function creerDonne(){
 
 			var jeu=[];
 
@@ -580,18 +592,18 @@
 			return donne;
 		};
 
-		//methode similaire à la précédente, 
-		//génére le tas en fonction des cartes des joueurs
-		// TODO a refactorer efficacement
-		var creerTas = function(){
+		/**
+		* création d'une nouvelle carte du tas
+		* @return nouvelle carte
+		*/
+		function creerTas(){
 
 			//prends des cartes dans le jeu des joueurs
-
 			//console.log("Dans creerTas, la partie vaut : ");
 			//console.log(partie);
 
 			var jeu=[];
-			//on prépare la liste des joueurs
+			var tas=[];
 			var listeDesJoueurs=[];
 			for (var i=partie.joueurs.length-1;i>=0;i--) {
 				listeDesJoueurs.push(getJoueurById(partie.joueurs[i]));
@@ -615,7 +627,7 @@
 					for (var j = jeu.length - 1; j >= 0; j--) {
 						if(jeu[j]==img){ok=false;break;}
 					}
-					console.log("la carte "+img+" n'est pasdéja pas dans le jeu");
+					console.log("la carte "+img+" n'est pas déja pas dans le jeu");
 					//ni dans le jeu des autres joueurs(sinon doublons pour eux !)
 					for (var j=listeDesJoueurs.length-1;j>=0;j--) {
 						if(i==j)continue;//on evite de regarder dans son propre jeu
@@ -640,11 +652,7 @@
 				}
 			}
 
-			//console.log("Avec les jeux des joueurs, la tas vaut pour l'instant :");
-			//console.log(jeu);
-
 			//on comble avec des cartes qui ne sont ni sur la carte, ni dans le jeu des joueurs
-
 			while(jeu.length<8){
 
 				//console.log("tirage carte pour combler");
@@ -675,8 +683,6 @@
 			//TODO trouver un algo certainement plus efficace
 			//console.log("le jeu complet avant mélangeage pour le Tas :");
 			//console.log(jeu);
-
-			var tas=[];
 
 			for (var i=0;i<8;i++){
 				var j=(Math.random()*8-i) | 0;

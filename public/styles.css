@@ -167,11 +167,11 @@ article{
 	min-height:50%;
 	max-height:50%;
 	vertical-align: center;
-	/*left:2em;
-	right:2em;*/
-	/*min-width:100%;*/
-	/*border:1px solid #000;*/
+	/* Hack chrome pour qu'il caclule une hauteur flex au composant*/
+		height:100%;
+
 }
+
 #newJeu {}
 #monJeu {}
 

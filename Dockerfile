@@ -11,4 +11,3 @@ COPY server.js /app/
 EXPOSE 1111
 
 CMD ["npm", "start"]
-

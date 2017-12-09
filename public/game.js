@@ -369,7 +369,35 @@ GAME.gameStart = (function(){
 		};
 		html+='</ul>';
 		return html;
+
+
+		// var html='<svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" >';
+		// for (var i =0;i<cartes.length;i++) {
+
+		// 	if(isJoueur){
+		// 		htmlImg = '<a xlink:href="carte'+i+'">'+
+		// 		'<image x="'+(cartes[i].x-cartes[i].r)+'"'+
+		// 			 ' y="'+(cartes[i].y-cartes[i].r)+'"'+
+		// 			 ' width="'+cartes[i].r*2+'"'+
+		// 			 ' height="'+cartes[i].r*2+'"'+
+		// 			 ' transform="rotate('+cartes[i].orientation+')"'+
+		// 			 ' xlink:href="images/'+cartes[i].img+'" />'+
+		// 		'</a>';
+		// 	}else{
+		// 		htmlImg = '<image x="'+(cartes[i].x-cartes[i].r)+'"'+
+		// 			 ' y="'+(cartes[i].y-cartes[i].r)+'"'+
+		// 			 ' width="'+cartes[i].r*2+'"'+
+		// 			 ' height="'+cartes[i].r*2+'"'+
+		// 			 ' transform="rotate('+cartes[i].orientation+')"'+
+		// 			 ' xlink:href="images/'+cartes[i].img+'" />';
+		// 	}
+		// 	html+=htmlImg;
+		// };
+		// html+='</svg>';
+		// return html;
 	}
+
+
 
 
 
